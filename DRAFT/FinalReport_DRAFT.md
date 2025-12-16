@@ -42,7 +42,11 @@ This section defines the "Rules of the Game" and how the agent perceives and int
 * **Type:** Continuous Control from Pixels.
 
 ### 3.2 Observation Space (States)
-The raw environment provides a $96 \times 96 \times 3$ RGB image. To reduce computational load and provide temporal context (speed/direction), we apply the following preprocessing pipeline:
+The raw environment provides a $96 \times 96 \times 3$ RGB image.
+![Example of how the enviroment looks like](enviroment.png)
+*Figure 1: Visual example of the `CarRacing-v3` (Gymnasium) enviroment.
+
+To reduce computational load and provide temporal context (speed/direction), we apply the following preprocessing pipeline:
 
 1.  **Grayscale Conversion:** The RGB image is converted to a single channel, reducing input depth.
 2.  **Frame Stacking:** We stack **4 consecutive frames** to allow the network to perceive motion (velocity and acceleration). A single static image is insufficient for inferring speed.
@@ -89,7 +93,7 @@ To process the visual input, we use a Convolutional Neural Network (CNN) backbon
 The following diagram illustrates the iterative learning process implemented in our project. It details the interaction between the Actor-Critic networks, the data collection buffer, and the optimization steps.
 
 ![PPO Training Loop Diagram](ppo_diagram.png)
-*Figure 1: Visual representation of the PPO training cycl, showing the data collection phase (filling the buffer) and the backpropagation phase (updating Actor and Critic).*
+*Figure 2: Visual representation of the PPO training cycl, showing the data collection phase (filling the buffer) and the backpropagation phase (updating Actor and Critic).*
 
 1.  **Rollout:** Collect $T$ timesteps of data using the current policy (filling the buffer with States, Actions, and Rewards).
 2.  **Advantage Estimation:** Calculate Generalized Advantage Estimation (GAE) to reduce variance.
