@@ -1,5 +1,0 @@
-gymnasium[box2d]>=0.29.0
-torch>=2.0.0
-numpy>=1.21.0
-moviepy
-imageio
