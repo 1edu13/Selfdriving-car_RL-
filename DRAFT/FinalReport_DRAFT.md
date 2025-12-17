@@ -99,3 +99,35 @@ The following diagram illustrates the iterative learning process implemented in 
 2.  **Advantage Estimation:** Calculate Generalized Advantage Estimation (GAE) to reduce variance.
 3.  **Optimization:** Update the network weights using Stochastic Gradient Descent (SGD) or Adam optimizer on the PPO loss function.
 4.  **Repeat:** Iterate until the average score stabilizes above 900.
+
+
+## 5. Evaluation of the Training Process and Results
+
+To validate the effectiveness of our custom PPO implementation, we employ a multi-faceted evaluation strategy. We focus on training duration, generalization capabilities, and benchmarking against established standards.
+
+### 5.1 Impact of Training Duration (Step Analysis)
+We investigate the relationship between the number of training steps and the agent's performance. Instead of arbitrary stopping points, we define fixed training budgets to analyze convergence.
+* **Experiment:** We train three distinct models for **500,000**, **1,000,000**, and **2,000,000 steps** respectively. (**number of steps has to be defined properly**)
+* **Metric:** We generate **Score vs. Steps** graphs (learning curves). These plots enable us to identify the "knee" of the curve—the point where the computational cost of further training outweighs the marginal gain in reward.
+
+### 5.2 Generalization vs. Memorization (Fixed vs. Random Tracks)
+A critical aspect of autonomous driving is the ability to handle unseen roads. We conduct an experiment to differentiate between "learning to drive" and "memorizing the map."
+* **Random Seeds (Generalization):** The standard training mode where the track is procedurally generated anew for every episode. This forces the agent to learn reactive driving skills (cornering, speed control) based on visual perception.
+* **Fixed Seed (Overfitting):** We train a separate agent on a **single, unchanging track layout**.
+* **Hypothesis & Comparison:** We expect the "Fixed Seed" agent to achieve higher scores much faster, as it can overfit to the specific geometry of that one track. However, we will demonstrate its fragility by testing it on a generated track, anticipating a significant performance drop compared to the "Random Seeds" agent.
+
+### 5.3 Benchmarking against Standard Libraries
+To verify the correctness of our "from-scratch" implementation, we will perform a comparative study against a reference implementation.
+* **Reference:** We will train an agent using **Stable Baselines3 (SB3)**, a widely used and reliable RL library, on the same `CarRacing-v3` environment for an identical number of steps.
+* **Goal:** Comparing the learning curve of our custom PPO against the SB3 PPO serves as a sanity check. It validates that our algorithm logic (GAE calculation, policy updates) is sound and competitive with optimized libraries.
+---
+
+
+## 6. Delivery and Usage
+The final project deliverable is structured as an archive containing:
+
+1.  **Source Code:**
+2.  **Trained Models:** 
+3.  **Requirements:** 
+   
+### 6.1 How to Run
