@@ -12,7 +12,7 @@ def make_env(env_id, seed, idx, capture_video, run_name):
         seed (int): Global seed for reproducibility.
         idx (int): Index of the environment (for vectorized environments).
         capture_video (bool): Whether to save videos of the agent driving.
-        run_name (str): Name of the experiment for video saving..
+        run_name (str): Name of the experiment for video saving.
     """
     def thunk():
         # Initialize the environment
