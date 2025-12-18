@@ -75,5 +75,5 @@ if __name__ == "__main__":
     # evaluate(args.model)
 
     # Escribe aquí la ruta exacta de tu modelo entre comillas:
-    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\src\models\ppo_car_racing_step_983040.pth"
+    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\src\models\ppo_car_racing_final.pth"
     evaluate(modelo_a_probar)
