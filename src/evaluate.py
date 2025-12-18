@@ -66,9 +66,14 @@ def evaluate(model_path, episodes=5):
     else:
         print("Keep Training: The agent has not yet reached the target score.")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model", type=str, required=True, help="Path to the trained .pth model")
-    args = parser.parse_args()
 
-    evaluate(args.model)
+if __name__ == "__main__":
+    # --- OPCIÓN MANUAL (Comenta las líneas de argparse si te dan problemas) ---
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--model", type=str, required=True, help="Path to the trained .pth model")
+    # args = parser.parse_args()
+    # evaluate(args.model)
+
+    # Escribe aquí la ruta exacta de tu modelo entre comillas:
+    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\src\models\ppo_car_racing_step_983040.pth"
+    evaluate(modelo_a_probar)
