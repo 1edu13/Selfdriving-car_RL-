@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import gymnasium as gym
 import os
-import argparse
 
 from agent import Agent
 from utils import make_env, get_device

@@ -10,11 +10,11 @@ from agent import Agent
 from utils import make_env, get_device
 
 def train():
-    # --- Hyperparameters (Tune these based on Section 5.1 of your report) ---
+    # --- Hyperparameters ---
     run_name = "ppo_carracing_v1"
     env_id = "CarRacing-v3"
     seed = 42
-    total_timesteps = 1000000  # As mentioned in Exp 5.1
+    total_timesteps = 1000000  # For achive a good trained agent, we recommend at least 1M steps
     learning_rate = 3e-4
     num_envs = 8               # Parallel environments for faster data collection
     num_steps = 1024           # Steps per environment per update (The 'Buffer' size)
@@ -24,9 +24,9 @@ def train():
     num_minibatches = 32
     update_epochs = 10
     norm_adv = True            # Normalize advantages
-    clip_coef = 0.2            # The epsilon for clipping (Section 2.2)
+    clip_coef = 0.2            # The epsilon for clipping. It prevents the policy from changing too much in a single update.
     ent_coef = 0.01            # Entropy coefficient to encourage exploration
-    vf_coef = 0.5              # Value function coefficient
+    vf_coef = 0.5              # Value function coefficient #Todo What is coeficent
     max_grad_norm = 0.5        # Gradient clipping
     batch_size = int(num_envs * num_steps)
     minibatch_size = int(batch_size // num_minibatches)
@@ -39,16 +39,18 @@ def train():
     os.makedirs("models", exist_ok=True)
     os.makedirs("videos", exist_ok=True)
 
-    # Vectorized Environment (Parallel data collection)
+    # Vectorized Environment (Parallel data collection) Creates 8 parallel environments
     envs = gym.vector.SyncVectorEnv(
         [make_env(env_id, seed + i, i, capture_video=False, run_name=run_name) for i in range(num_envs)]
     )
 
     # Initialize Agent
     agent = Agent(envs).to(device)
+    #Uses Adam optimizer to update the network weights #Todo What is Adam?
     optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 
-    # --- Storage Buffers (The "Buffer" from your diagram) ---
+    # --- Storage Buffers  ---
+    #Act as the memory used to estoore the steps of the experience
     obs = torch.zeros((num_steps, num_envs) + envs.single_observation_space.shape).to(device)
     actions = torch.zeros((num_steps, num_envs) + envs.single_action_space.shape).to(device)
     logprobs = torch.zeros((num_steps, num_envs)).to(device)
@@ -60,7 +62,7 @@ def train():
     global_step = 0
     start_time = time.time()
 
-    # Initial observation
+    # Initial observation #Todo What does torch.Tensor and torch.zeros do?
     next_obs = torch.Tensor(envs.reset()[0]).to(device)
     next_done = torch.zeros(num_envs).to(device)
     num_updates = total_timesteps // batch_size
@@ -70,10 +72,13 @@ def train():
     for update in range(1, num_updates + 1):
         # 1. Rollout Phase (Data Collection)
         if anneal_lr:
+            #Calculates how far along training we are (0 to 1). This is used to lower the learning rate (lrnow) slowly
+            # over time ("annealing").
             frac = 1.0 - (update - 1.0) / num_updates
             lrnow = frac * learning_rate
             optimizer.param_groups[0]["lr"] = lrnow
 
+        # Runs the game
         for step in range(0, num_steps):
             global_step += 1 * num_envs
             obs[step] = next_obs
@@ -81,6 +86,7 @@ def train():
 
             # Action logic (no grad needed for collection)
             with torch.no_grad():
+                #The agent looks at the observation, and picks the action
                 action, logprob, _, value = agent.get_action_and_value(next_obs)
                 values[step] = value.flatten()
 
@@ -101,11 +107,13 @@ def train():
                     if info and "episode" in info:
                         print(f"Global Step: {global_step} | Episode Reward: {info['episode']['r']}")
 
-        # 2. Advantage Estimation (GAE)
+        # 2. Generalized Advantage Estimation (GAE)
+        # "Advantage" asks: How much better was this specific action compared to the average action in this state? Todo -> Improve the explication
         with torch.no_grad():
             next_value = agent.get_value(next_obs).reshape(1, -1)
             advantages = torch.zeros_like(rewards).to(device)
             lastgaelam = 0
+            # Goes backwards from the last step to the first, which balances immediate rewards vs. long-term rewards.
             for t in reversed(range(num_steps)):
                 if t == num_steps - 1:
                     nextnonterminal = 1.0 - next_done
@@ -120,7 +128,7 @@ def train():
             returns = advantages + values
 
         # 3. Optimization Phase (Backpropagation)
-        # Flatten the batch
+        # Flatten the batch Todo What is Flatten?
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
         b_logprobs = logprobs.reshape(-1)
         b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
@@ -133,13 +141,13 @@ def train():
         clipfracs = []
         for epoch in range(update_epochs):
             np.random.shuffle(b_inds)
-            for start in range(0, batch_size, minibatch_size):
+            for start in range(0, batch_size, minibatch_size): # It goes multiple times in minibatches
                 end = start + minibatch_size
                 mb_inds = b_inds[start:end]
 
                 _, newlogprob, entropy, newvalue = agent.get_action_and_value(b_obs[mb_inds], b_actions[mb_inds])
-                logratio = newlogprob - b_logprobs[mb_inds]
-                ratio = logratio.exp()
+                logratio = newlogprob - b_logprobs[mb_inds] #Recalculates the new probability
+                ratio = logratio.exp() #Ration compares the new probability with the old one
 
                 # Calculate Advantages
                 with torch.no_grad():
@@ -148,12 +156,12 @@ def train():
                     if norm_adv:
                         mb_advantages = (mb_advantages - mb_advantages.mean()) / (mb_advantages.std() + 1e-8)
 
-                # Policy Loss (The Clipped Objective from Section 2.2)
+                # Policy Loss. Clip function is used to prevent large updates when the ratio is too large.
                 pg_loss1 = -mb_advantages * ratio
                 pg_loss2 = -mb_advantages * torch.clamp(ratio, 1 - clip_coef, 1 + clip_coef)
                 pg_loss = torch.max(pg_loss1, pg_loss2).mean()
 
-                # Value Loss
+                # Value Loss -> It forces the critic to predict values close to the returns (as measured by GAE).
                 newvalue = newvalue.view(-1)
                 v_loss = 0.5 * ((newvalue - b_returns[mb_inds]) ** 2).mean()
 
@@ -164,9 +172,9 @@ def train():
                 loss = pg_loss - ent_coef * entropy_loss + vf_coef * v_loss
 
                 optimizer.zero_grad()
-                loss.backward()
+                loss.backward() # Calculate gradients
                 nn.utils.clip_grad_norm_(agent.parameters(), max_grad_norm)
-                optimizer.step()
+                optimizer.step() # Update weights
 
         # Save Model periodically
         if update % 10 == 0:
