@@ -89,7 +89,7 @@ class Agent(nn.Module):
     def get_value(self, x):
         """Returns the value estimation V(s) for the given observations x."""
         # Normalize input if not done in wrapper: x / 255.0
-        return self.critic(self.network(x / 255.0)) #Todo
+        return self.critic(self.network(x / 255.0)) # dividing by 255 because that is the maximum value of a pixel in a standard digital image.
 
     def get_action_and_value(self, x, action=None):
         """
@@ -103,7 +103,7 @@ class Agent(nn.Module):
         # Normalization happening here (or in wrapper)
         hidden = self.network(x / 255.0)
 
-        # Actor: Calculate mean and std for the Normal distribution #Todo What is std
+        # Actor: Calculate mean and std (exploratión) for the Normal distribution
         action_mean = self.actor_mean(hidden)
         action_logstd = self.actor_logstd.expand_as(action_mean)
         action_std = torch.exp(action_logstd)

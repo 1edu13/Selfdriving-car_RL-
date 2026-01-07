@@ -26,7 +26,7 @@ def train():
     norm_adv = True            # Normalize advantages
     clip_coef = 0.2            # The epsilon for clipping. It prevents the policy from changing too much in a single update.
     ent_coef = 0.01            # Entropy coefficient to encourage exploration
-    vf_coef = 0.5              # Value function coefficient #Todo What is coeficent
+    vf_coef = 0.5              # Value function coefficient -> Focus on the Actor erros more than the critic ones. See line 172
     max_grad_norm = 0.5        # Gradient clipping
     batch_size = int(num_envs * num_steps)
     minibatch_size = int(batch_size // num_minibatches)
@@ -46,7 +46,9 @@ def train():
 
     # Initialize Agent
     agent = Agent(envs).to(device)
-    #Uses Adam optimizer to update the network weights #Todo What is Adam?
+    #Uses Adam optimizer to update the network weights in order to minimize the loss function.
+    # It is an evolution of SGD with momentum and adaptive learning rates.
+    # New Weight = Old Weight - Global LR * Adaptive Adjustment
     optimizer = optim.Adam(agent.parameters(), lr=learning_rate, eps=1e-5)
 
     # --- Storage Buffers  ---
@@ -62,8 +64,12 @@ def train():
     global_step = 0
     start_time = time.time()
 
-    # Initial observation #Todo What does torch.Tensor and torch.zeros do?
+    # Initial observation Convert the raw image into format compatible with NN (and with GPU).
+    # 1. Get the first image
+    # envs.reset() starts the game. We take the image ([0]) and convert it to a Tensor (Fuel).
     next_obs = torch.Tensor(envs.reset()[0]).to(device)
+    # 2. Set status to "Alive"
+    # We create a list of zeros because no car has crashed yet.
     next_done = torch.zeros(num_envs).to(device)
     num_updates = total_timesteps // batch_size
 
@@ -108,11 +114,12 @@ def train():
                         print(f"Global Step: {global_step} | Episode Reward: {info['episode']['r']}")
 
         # 2. Generalized Advantage Estimation (GAE)
-        # "Advantage" asks: How much better was this specific action compared to the average action in this state? Todo -> Improve the explication
+        # "Advantage" asks: How much better was this specific action compared to the average action in this state? Todo -> Bellman Equation to the memory.
         with torch.no_grad():
             next_value = agent.get_value(next_obs).reshape(1, -1)
             advantages = torch.zeros_like(rewards).to(device)
-            lastgaelam = 0
+            lastgaelam = 0 #Carries the "momentum" of reward from the future back to the present
+
             # Goes backwards from the last step to the first, which balances immediate rewards vs. long-term rewards.
             for t in reversed(range(num_steps)):
                 if t == num_steps - 1:
@@ -122,13 +129,19 @@ def train():
                     nextnonterminal = 1.0 - dones[t + 1]
                     nextvalues = values[t + 1]
 
+                # The bellman error equation
                 delta = rewards[t] + gamma * nextvalues * nextnonterminal - values[t]
+
+                #Calculate the GAE
                 advantages[t] = lastgaelam = delta + gamma * gae_lambda * nextnonterminal * lastgaelam
 
             returns = advantages + values
 
         # 3. Optimization Phase (Backpropagation)
-        # Flatten the batch Todo What is Flatten?
+        # Flatten the batchThis converts our structured experience into a flat batch of 8,192 independent samples, which
+        # allows for efficient parallel processing on the GPU.
+        #The original shape is a grid of probabilities (1024, 8), and now is a single list (8192)
+        # 2D [Time step][specific car] (We run 8 cars simultaneously)
         b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
         b_logprobs = logprobs.reshape(-1)
         b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
