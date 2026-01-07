@@ -35,8 +35,8 @@ def train():
     device = get_device()
     print(f"Training on device: {device}")
 
-    # Create directories for saving models
-    os.makedirs("models", exist_ok=True)
+    # Create directories for saving models_T1
+    os.makedirs("../Models/models_T1", exist_ok=True)
     os.makedirs("videos", exist_ok=True)
 
     # Vectorized Environment (Parallel data collection) Creates 8 parallel environments
@@ -178,11 +178,11 @@ def train():
 
         # Save Model periodically
         if update % 10 == 0:
-            torch.save(agent.state_dict(), f"models/ppo_car_racing_step_{global_step}.pth")
+            torch.save(agent.state_dict(), f"../Models/models_T1/ppo_car_racing_step_{global_step}.pth")
             print(f"Model saved at step {global_step}")
 
     # Save final model
-    torch.save(agent.state_dict(), "models/ppo_car_racing_final.pth")
+    torch.save(agent.state_dict(), "../Models/models_T1/ppo_car_racing_final.pth")
     envs.close()
     print("Training Completed.")
 

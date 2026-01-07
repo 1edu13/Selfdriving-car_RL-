@@ -19,19 +19,33 @@ class Agent(nn.Module):
         # Input: (4, 96, 96) - Stacked grayscale frames
         # Output: A flattened vector of spatial features
         self.network = nn.Sequential( #CNN which proceces the images
+            # Take a raw image, and compress into a small meaningfull summary.
 
-            #It takes the 4 stacked frames as input and creates 32 feature maps. It uses a large kernel (8x8) and stride
-            # (4) to quickly reduce the image size.
+            #CONV 1 -> DETECTS LOW LEVEL FEATURES -> We sacrifice detail tpo get a quick overview of the scene.
+            #It takes the 4 stacked frames as input and creates 32 feature maps.
+            # It uses a large kernel (8x8) -> "Window". Looks at a big chunk of the image at once.
+            # Stride (4) -> Jumps 4 pixel. It reduces the imgae size to the fourth of its original size.
+            # to quickly reduce the image size.
             layer_init(nn.Conv2d(4, 32, kernel_size=8, stride=4)), # Conv 1
+
+            #T RELU EXPLICATION -> this stands for Rectified Linear Unit. It simply converts all negative numbers to 0.
+            # Without this, your massive neural network would mathematically behave like a single, simple linear equation
+            # ($y = mx + b$). ReLU introduces non-linearity, allowing the brain to understand complex, curvy, and irregular
+            # patterns (like a race track).
             nn.ReLU(), #Activation function tha introduces non-linearity (allows the network to learn more complex functions)
 
-            #Layers continue to extract more abstract features like curves and road borders, while reducing the image size
+            # CONV 2 -> Layers continue to extract more abstract features like curves and road borders, while reducing the image size
             layer_init(nn.Conv2d(32, 64, kernel_size=4, stride=2)), # Conv 2
             nn.ReLU(),
 
-            #Todo
+            # CONV 3 -> It looks very closely at the features extracted by the previous layers. This layer detects high-level
+            # spatial relationships. Dont see It refines the features extracted by the previous layers.
             layer_init(nn.Conv2d(64, 64, kernel_size=3, stride=1)), # Conv 3
             nn.ReLU(),
+
+            #FLATTEN EXPLICATION -> Convolutional layers output "3D blocks" of data (height, width, depth). But the decision-making part of your
+            # brain (the Actor and Critic, which we will see later) expects a flat list of numbers. This line crushes the 3D block
+            # into a single long vector (1D array), ready to be processed.
             nn.Flatten(),
         )
 
