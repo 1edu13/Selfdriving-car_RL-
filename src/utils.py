@@ -1,7 +1,6 @@
 import gymnasium as gym
 import torch
-import numpy as np
-from gymnasium.wrappers import GrayScaleObservation, ResizeObservation, FrameStack, TransformObservation
+from gymnasium.wrappers import GrayScaleObservation, FrameStack
 
 def make_env(env_id, seed, idx, capture_video, run_name):
     """

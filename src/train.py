@@ -3,7 +3,6 @@ import torch.nn as nn
 import torch.optim as optim
 import numpy as np
 import gymnasium as gym
-import time
 import os
 
 from agent import Agent
@@ -62,7 +61,6 @@ def train():
 
     # Start the game
     global_step = 0
-    start_time = time.time()
 
     # Initial observation Convert the raw image into format compatible with NN (and with GPU).
     # 1. Get the first image
@@ -147,11 +145,9 @@ def train():
         b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
         b_advantages = advantages.reshape(-1)
         b_returns = returns.reshape(-1)
-        b_values = values.reshape(-1)
 
         # Optimize policy and value network
         b_inds = np.arange(batch_size)
-        clipfracs = []
         for epoch in range(update_epochs):
             np.random.shuffle(b_inds)
             for start in range(0, batch_size, minibatch_size): # It goes multiple times in minibatches
