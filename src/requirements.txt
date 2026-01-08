@@ -1,0 +1,5 @@
+gymnasium[box2d]==0.29.1
+numpy<2.0
+torch>=2.0.0
+moviepy
+imageio

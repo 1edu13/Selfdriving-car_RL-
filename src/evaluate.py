@@ -20,7 +20,7 @@ def evaluate(model_path, episodes=5):
     # Environment Setup
     # We use capture_video=True to save the run in the 'videos/' folder
     run_name = "eval_" + os.path.basename(model_path).replace(".pth", "")
-    env = make_env("CarRacing-v3", seed=100, idx=0, capture_video=True, run_name=run_name)()
+    env = make_env("CarRacing-v2", seed=100, idx=0, capture_video=True, run_name=run_name)()
 
     # Initialize Agent and Load Weights
     # Note: We must initialize the agent with a dummy environment to get the correct shapes
@@ -35,7 +35,7 @@ def evaluate(model_path, episodes=5):
 
     for episode in range(episodes):
         obs, _ = env.reset()
-        obs = torch.Tensor(obs).unsqueeze(0).to(device) # Add batch dimension (1, 4, 96, 96)
+        obs = torch.as_tensor(np.array(obs)).float().unsqueeze(0).to(device) # Add batch dimension (1, 4, 96, 96)
 
         done = False
         episode_reward = 0
@@ -51,8 +51,7 @@ def evaluate(model_path, episodes=5):
             done = terminated or truncated
             episode_reward += reward
 
-            obs = torch.Tensor(next_obs).unsqueeze(0).to(device)
-
+            obs = torch.as_tensor(np.array(next_obs)).float().unsqueeze(0).to(device)
         print(f"Episode {episode + 1}: Reward = {episode_reward:.2f}")
         total_rewards.append(episode_reward)
 
@@ -74,5 +73,6 @@ if __name__ == "__main__":
     # evaluate(args.model)
 
     # Escribe aquí la ruta exacta de tu modelo entre comillas:
-    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\src\models\ppo_car_racing_final.pth"
+    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T1\ppo_car_racing_final.pth"
+
     evaluate(modelo_a_probar)
