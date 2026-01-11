@@ -36,7 +36,7 @@ def train():
 
     # Create directories for saving models_T3
     os.makedirs("../Models/models_T3", exist_ok=True)
-    os.makedirs("videos_T3", exist_ok=True)
+    os.makedirs("../Models/models_T3/videos_T3", exist_ok=True)
 
     # Vectorized Environment (Parallel data collection) Creates 8 parallel environments
     envs = gym.vector.AsyncVectorEnv(
