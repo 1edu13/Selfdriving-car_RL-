@@ -18,7 +18,7 @@ def evaluate(model_path, episodes=5):
     print(f"Evaluating model: {model_path} on {device}")
 
     # Environment Setup
-    # We use capture_video=True to save the run in the 'videos/' folder
+    # We use capture_video=True to save the run in the 'videos_T1/' folder
     run_name = "eval_" + os.path.basename(model_path).replace(".pth", "")
     env = make_env("CarRacing-v2", seed=100, idx=0, capture_video=True, run_name=run_name)()
 
@@ -73,6 +73,6 @@ if __name__ == "__main__":
     # evaluate(args.model)
 
     # Escribe aquí la ruta exacta de tu modelo entre comillas:
-    # modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T1\ppo_car_racing_final.pth"
-    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T1\ppo_car_racing_final.pth"
+    modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth"
+    # modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_final.pth"
     evaluate(modelo_a_probar)
