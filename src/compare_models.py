@@ -7,8 +7,9 @@ from math import pi
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns  # Opcional, pero ayuda con paletas grandes. Usaremos matplotlib nativo por compatibilidad.
 
+
+# import seaborn as sns  <-- Lo comento para evitar errores si no lo tienes instalado, el código usa matplotlib nativo
 
 class ComparativeAnalysis:
     """
@@ -140,8 +141,10 @@ class ComparativeAnalysis:
         ax.set_title("Metric Correlations (All Models)", fontsize=14, fontweight="bold")
         fig.colorbar(im, ax=ax)
         plt.tight_layout()
-        plt.savefig(self.comparison_dir / "A_correlation_heatmap.png", dpi=300)
+        plot_file = self.comparison_dir / "A_correlation_heatmap.png"
+        plt.savefig(plot_file, dpi=300)
         plt.close()
+        print(f"📊 Heatmap saved to: {plot_file}")
 
     def plot_radar_charts(self):
         """B. Radar chart de control (Profile)."""
@@ -175,9 +178,11 @@ class ComparativeAnalysis:
         for idx, row in plot_df.iterrows():
             values = row[categories].tolist()
             values += values[:1]
-            # Solo pintamos leyenda para el primero, medio y último para no saturar si son 7
-            label = row['Model']
-            ax.plot(angles, values, linewidth=2, linestyle='solid', label=label, color=palette[idx % len(palette)])
+
+            # Shorten name for legend
+            short_name = row['Model'].replace("ppo_car_racing_step_", "")
+
+            ax.plot(angles, values, linewidth=2, linestyle='solid', label=short_name, color=palette[idx % len(palette)])
             ax.fill(angles, values, color=palette[idx % len(palette)], alpha=0.05)
 
         ax.set_xticks(angles[:-1])
@@ -185,8 +190,10 @@ class ComparativeAnalysis:
         ax.set_title("Driving Profile Comparison (Normalized)", fontsize=15, fontweight="bold", y=1.05)
         ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.1))
 
-        plt.savefig(self.comparison_dir / "B_control_radar.png", dpi=300)
+        plot_file = self.comparison_dir / "B_control_radar.png"
+        plt.savefig(plot_file, dpi=300)
         plt.close()
+        print(f"📊 Radar chart saved to: {plot_file}")
 
     def plot_learning_curve_log(self):
         """C. Learning curve (Reward vs Log Steps)."""
@@ -229,8 +236,10 @@ class ComparativeAnalysis:
             label = f"{int(s / 1000)}k" if s < 1000000 else f"{s / 1000000:.1f}M"
             ax.text(s, r + 40, label, ha='center', va='bottom', fontsize=9, fontweight='bold')
 
-        plt.savefig(self.comparison_dir / "C_learning_curve_log.png", dpi=300)
+        plot_file = self.comparison_dir / "C_learning_curve_log.png"
+        plt.savefig(plot_file, dpi=300)
         plt.close()
+        print(f"📊 Learning curve saved to: {plot_file}")
 
     def plot_scatter_survival(self, df_all: pd.DataFrame):
         """D. Scatter plot: Episode Length vs Reward."""
@@ -241,8 +250,10 @@ class ComparativeAnalysis:
 
         for i, model in enumerate(models):
             subset = df_all[df_all['Model'] == model]
+            short_name = model.replace("ppo_car_racing_step_", "")
+
             ax.scatter(subset['episode_length'], subset['total_reward'],
-                       label=model, alpha=0.7, s=80, edgecolors='w', color=palette[i])
+                       label=short_name, alpha=0.7, s=80, edgecolors='w', color=palette[i % len(palette)])
 
         ax.set_xlabel('Episode Length (Steps)')
         ax.set_ylabel('Total Reward')
@@ -251,8 +262,10 @@ class ComparativeAnalysis:
         ax.legend(title="Model Checkpoint")
         ax.grid(True, alpha=0.3)
 
-        plt.savefig(self.comparison_dir / "D_scatter_survival.png", dpi=300)
+        plot_file = self.comparison_dir / "D_scatter_survival.png"
+        plt.savefig(plot_file, dpi=300)
         plt.close()
+        print(f"📊 Scatter plot saved to: {plot_file}")
 
     def plot_boxplots(self):
         """Box Plots for reward comparison."""
@@ -268,7 +281,9 @@ class ComparativeAnalysis:
             results = self.all_results[model_name]
             rewards = [ep["total_reward"] for ep in results["episodes"]]
             data_to_plot.append(rewards)
-            labels.append(model_name)
+
+            short_name = model_name.replace("ppo_car_racing_step_", "")
+            labels.append(short_name)
 
         box = ax.boxplot(data_to_plot, labels=labels, patch_artist=True)
 
@@ -278,21 +293,23 @@ class ComparativeAnalysis:
             patch.set_alpha(0.7)
 
         ax.set_ylabel("Total Reward")
-        ax.set_title("Reward Stability & Variance (7 Models)", fontsize=16, fontweight="bold")
+        ax.set_title("Reward Stability & Variance", fontsize=16, fontweight="bold")
         ax.grid(axis='y', linestyle='--', alpha=0.7)
         ax.axhline(y=900, color="green", linestyle="--", linewidth=2, label="Target (900)")
 
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig(self.comparison_dir / "model_comparison_boxplot.png", dpi=300)
+        plot_file = self.comparison_dir / "model_comparison_boxplot.png"
+        plt.savefig(plot_file, dpi=300)
         plt.close()
+        print(f"📊 Boxplot saved to: {plot_file}")
 
     # ------------------------------------------------------------------ #
     #  Main Pipeline
     # ------------------------------------------------------------------ #
     def run_full_comparison(self, model_names):
         print("\n" + "=" * 80)
-        print("ADVANCED COMPARATIVE ANALYSIS (7 MODELS)")
+        print("ADVANCED COMPARATIVE ANALYSIS")
         print("=" * 80)
 
         self.load_all_models(model_names)
@@ -313,7 +330,8 @@ class ComparativeAnalysis:
         # Report textual simple
         report_path = self.comparison_dir / "comparison_report.txt"
         with open(report_path, "w") as f:
-            f.write("Comparison of 7 models completed.\n")
+            f.write("Comparison completed.\n")
+            f.write(f"Models analyzed: {len(model_names)}\n")
             f.write("Check plots in this folder.\n")
 
         print("\n" + "=" * 80)
@@ -321,5 +339,13 @@ class ComparativeAnalysis:
 
 
 if __name__ == "__main__":
-    # Test dummy
-    pass
+    # Nombres EXACTOS de las carpetas que ya tienes generadas en evaluation_results
+    existing_models = [
+        "ppo_car_racing_step_500000",
+        "ppo_car_racing_step_1000000",
+        "ppo_car_racing_step_2000000",
+    ]
+
+    print("🚀 Iniciando prueba con modelos existentes...")
+    analyzer = ComparativeAnalysis(evaluation_results_dir="evaluation_results")
+    analyzer.run_full_comparison(existing_models)
