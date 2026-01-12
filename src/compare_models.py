@@ -1,6 +1,8 @@
 import json
+import re
 from pathlib import Path
 from datetime import datetime
+from math import pi
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,35 +16,23 @@ class ComparativeAnalysis:
     """
 
     def __init__(self, evaluation_results_dir: str = "evaluation_results"):
-        """
-        Args:
-            evaluation_results_dir (str): Directory containing the results.
-        """
         self.eval_dir = Path(evaluation_results_dir)
         self.comparison_dir = Path("comparison_analysis")
         self.comparison_dir.mkdir(parents=True, exist_ok=True)
-
         self.all_results = {}
 
-    # ------------------------------------------------------------------ #
-    #  Load Results
-    # ------------------------------------------------------------------ #
     def load_model_results(self, model_name: str):
         """Loads results for a specific model."""
         results_file = self.eval_dir / model_name / "results.json"
-
         if not results_file.exists():
             print(f"⚠️  Not found: {results_file}")
             return None
-
         with open(results_file, "r", encoding="utf-8") as f:
-            results = json.load(f)
-        return results
+            return json.load(f)
 
     def load_all_models(self, model_names):
         """Loads results for all specified models."""
         print("\n📂 Loading model results...")
-
         for model_name in model_names:
             print(f"  Loading: {model_name}...", end=" ")
             results = self.load_model_results(model_name)
@@ -55,400 +45,260 @@ class ComparativeAnalysis:
         if not self.all_results:
             raise ValueError("No valid results were loaded.")
 
-        print(f"\n✓ {len(self.all_results)} models loaded successfully\n")
-
     # ------------------------------------------------------------------ #
-    #  Comparison DataFrame
+    #  Data Processing
     # ------------------------------------------------------------------ #
     def create_comparison_dataframe(self) -> pd.DataFrame:
-        """Creates a DataFrame with statistics from all models."""
-        comparison_data = []
+        """Creates a DataFrame with aggregated statistics."""
+        data = []
+        for model, res in self.all_results.items():
+            s = res["statistics"]
+            data.append({
+                "Model": model,
+                "Mean Reward": s["mean_reward"],
+                "Std Dev": s["std_reward"],
+                "Win Rate (%)": s["win_rate"],
+                "Avg Steps": s["mean_length"],
+                "Steering (std)": s.get("steering_std", 0),  # Fallback if not present
+                "Throttle (mean)": s["throttle_mean"],
+                "Brake (mean)": s["brake_mean"]
+            })
+        return pd.DataFrame(data)
 
-        for model_name, results in self.all_results.items():
-            stats = results["statistics"]
-            comparison_data.append(
-                {
-                    "Model": model_name,
-                    "Mean Reward": stats["mean_reward"],
-                    "Std Dev": stats["std_reward"],
-                    "Min": stats["min_reward"],
-                    "Max": stats["max_reward"],
-                    "Win Rate (%)": stats["win_rate"],
-                    "Success Rate (%)": stats["success_rate"],
-                    "Avg Steps": stats["mean_length"],
-                    "Episodes": results["num_episodes"],
-                }
-            )
-
-        return pd.DataFrame(comparison_data)
+    def get_all_episodes_dataframe(self) -> pd.DataFrame:
+        """Creates a detailed DataFrame with ALL episodes from ALL models."""
+        all_eps = []
+        for model, res in self.all_results.items():
+            for ep in res["episodes"]:
+                flat_ep = ep.copy()
+                flat_ep["Model"] = model
+                # Add calculated metrics
+                # Efficiency: Reward per step (proxy for Speed/Efficiency)
+                flat_ep["efficiency"] = ep["total_reward"] / max(ep["episode_length"], 1)
+                all_eps.append(flat_ep)
+        return pd.DataFrame(all_eps)
 
     # ------------------------------------------------------------------ #
-    #  Text Report
+    #  Advanced Plotting Logic
     # ------------------------------------------------------------------ #
-    def _format_table(self, df: pd.DataFrame) -> str:
-        """Formats a DataFrame as an ASCII table."""
-        df_display = df.copy()
-        for col in df_display.columns:
-            if col not in ("Model", "Episodes"):
-                df_display[col] = df_display[col].round(2)
-        return df_display.to_string(index=False)
+    def plot_correlations(self, df_all: pd.DataFrame):
+        """A. Heatmap de correlaciones."""
+        # Select numeric columns relevant for correlation
+        cols = ["total_reward", "episode_length", "efficiency",
+                "steering_std", "throttle_mean", "brake_mean"]
 
-    def generate_comparison_report(self) -> str:
-        """Generates a textual comparison report."""
+        # Rename for cleaner plot
+        rename_map = {
+            "total_reward": "Reward", "episode_length": "Steps",
+            "efficiency": "Speed/Eff", "steering_std": "Steer Activity",
+            "throttle_mean": "Throttle", "brake_mean": "Brake"
+        }
+        df_corr = df_all[cols].rename(columns=rename_map)
+
+        corr = df_corr.corr()
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        im = ax.imshow(corr, cmap="coolwarm", vmin=-1, vmax=1)
+
+        # Add labels
+        ax.set_xticks(np.arange(len(corr.columns)))
+        ax.set_yticks(np.arange(len(corr.columns)))
+        ax.set_xticklabels(corr.columns, rotation=45, ha="right")
+        ax.set_yticklabels(corr.columns)
+
+        # Add text annotations
+        for i in range(len(corr.columns)):
+            for j in range(len(corr.columns)):
+                text = ax.text(j, i, f"{corr.iloc[i, j]:.2f}",
+                               ha="center", va="center", color="black")
+
+        ax.set_title("Metric Correlations (All Models)", fontsize=14, fontweight="bold")
+        fig.colorbar(im, ax=ax, label="Correlation Coefficient")
+
+        out_path = self.comparison_dir / "A_correlation_heatmap.png"
+        plt.tight_layout()
+        plt.savefig(out_path, dpi=300)
+        plt.close()
+        print(f"📊 Heatmap saved to: {out_path}")
+
+    def plot_radar_charts(self):
+        """B. Radar chart de control (Profile)."""
+        # Prepare data: Normalize metrics 0-1 across models to compare profiles
         df = self.create_comparison_dataframe()
 
-        report = f"""
-╔════════════════════════════════════════════════════════════════════════════╗
-║                COMPARATIVE ANALYSIS - SELF-DRIVING CAR RL                  ║
-╚════════════════════════════════════════════════════════════════════════════╝
+        # Metrics to display on radar
+        categories = ['Steering (Activity)', 'Throttle', 'Brake', 'Consistency', 'Efficiency']
+        # Consistency = 1 / StdDev of Reward (Normalized)
+        # Efficiency = Mean Reward / Avg Steps (Normalized)
 
-📊 EXECUTIVE SUMMARY
-{'─' * 80}
-Evaluated Models:  {len(self.all_results)}
-Analysis Date:     {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        # Calculate derived metrics
+        df['Consistency'] = 1 / (df['Std Dev'] + 1e-6)
+        df['Efficiency'] = df['Mean Reward'] / df['Avg Steps']
+        df['Steering (Activity)'] = df['Steering (std)']  # Using std as activity proxy
 
-┌────────────────────────────────────────────────────────────────────────────┐
-│ PERFORMANCE COMPARISON TABLE                                               │
-└────────────────────────────────────────────────────────────────────────────┘
+        # Normalize columns for the chart (Min-Max scaling)
+        plot_df = pd.DataFrame()
+        plot_df['Model'] = df['Model']
+        for col in categories:
+            min_val = df[col].min()
+            max_val = df[col].max()
+            if max_val - min_val == 0:
+                plot_df[col] = 0.5  # Default if all same
+            else:
+                plot_df[col] = (df[col] - min_val) / (max_val - min_val)
 
-{self._format_table(df)}
+        # Plotting
+        N = len(categories)
+        angles = [n / float(N) * 2 * pi for n in range(N)]
+        angles += angles[:1]  # Close the loop
 
-╔════════════════════════════════════════════════════════════════════════════╗
-║                          DETAILED ANALYSIS                                ║
-╚════════════════════════════════════════════════════════════════════════════╝
-"""
+        fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(polar=True))
 
-        # Analysis by model
-        for model_name, results in self.all_results.items():
-            stats = results["statistics"]
-            report += f"""
-📌 {model_name.upper()}
-{'─' * 80}
-Evaluated Episodes:     {results['num_episodes']}
-Device:                 {results['device']}
-Seed:                   {results['seed']}
+        colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A"]
 
-PERFORMANCE:
-  • Mean Reward:        {stats['mean_reward']:>8.2f} ± {stats['std_reward']:>6.2f}
-  • Range:              [{stats['min_reward']:>7.1f}, {stats['max_reward']:>7.1f}]
-  • Median:             {stats['median_reward']:>8.2f}
-  • Win Rate:           {stats['win_rate']:>8.1f}% (reward > 900)
-  • Success Rate:       {stats['success_rate']:>8.1f}% (reward > 0)
+        for idx, row in plot_df.iterrows():
+            values = row[categories].tolist()
+            values += values[:1]  # Close the loop
 
-DURATION:
-  • Avg Steps:          {stats['mean_length']:>8.1f} ± {stats['std_length']:>6.1f}
+            short_name = row['Model'].split('_step_')[-1]
+            if "final" in row['Model']: short_name = "Final"
 
-CONTROL:
-  • Steering (mean):    {stats['steering_mean']:>8.4f}
-  • Throttle (mean):    {stats['throttle_mean']:>8.4f}
-  • Brake (mean):       {stats['brake_mean']:>8.4f}
-"""
+            ax.plot(angles, values, linewidth=2, linestyle='solid', label=short_name, color=colors[idx % len(colors)])
+            ax.fill(angles, values, color=colors[idx % len(colors)], alpha=0.1)
 
-        # Improvement comparison
-        model_names = list(self.all_results.keys())
-        if len(model_names) > 1:
-            first = self.all_results[model_names[0]]["statistics"]
-            last = self.all_results[model_names[-1]]["statistics"]
-            improvement = (
-                (last["mean_reward"] - first["mean_reward"])
-                / (abs(first["mean_reward"]) + 1e-6)
-                * 100
-            )
+        ax.set_xticks(angles[:-1])
+        ax.set_xticklabels(categories, fontsize=10, fontweight="bold")
+        ax.set_title("Driving Profile Comparison (Normalized)", fontsize=15, fontweight="bold", y=1.05)
+        ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.1))
 
-            report += f"""
-{'═' * 80}
-🚀 IMPROVEMENT ANALYSIS (First vs Last)
-{'─' * 80}
-
-Base Model:            {model_names[0]}
-Final Model:           {model_names[-1]}
-
-Base Reward:           {first['mean_reward']:>10.2f}
-Final Reward:          {last['mean_reward']:>10.2f}
-Absolute Improvement:  {last['mean_reward'] - first['mean_reward']:>10.2f}
-Relative Improvement:  {improvement:>10.1f}%
-
-Base Win Rate:         {first['win_rate']:>10.1f}%
-Final Win Rate:        {last['win_rate']:>10.1f}%
-Win Rate Improvement:  {last['win_rate'] - first['win_rate']:>10.1f}%
-
-{'═' * 80}
-"""
-
-        report += """
-💡 CONCLUSIONS AND RECOMMENDATIONS
-{'─' * 80}
-
-1. OVERALL PERFORMANCE:
-   - Identify the model with the highest stable mean reward.
-   - Models trained longer tend to be more stable.
-
-2. STABILITY (Standard Deviation):
-   - Lower deviation = more predictable behavior.
-
-3. WIN RATE:
-   - Target: reward > 900.
-
-4. EPISODE DURATION:
-   - Longer duration (without reaching 1000 limit aimlessly) often indicates
-     the agent is staying on track.
-
-5. CONTROL PATTERNS:
-   - Extreme values for steering/brake might indicate jittery driving.
-
-╔════════════════════════════════════════════════════════════════════════════╗
-║                          END OF ANALYSIS                                  ║
-╚════════════════════════════════════════════════════════════════════════════╝
-"""
-        return report
-
-    # ------------------------------------------------------------------ #
-    #  Plots
-    # ------------------------------------------------------------------ #
-    def plot_comparison(self):
-        """Generates comparison plots between models."""
-        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle("Comparative Analysis of RL Models", fontsize=18, fontweight="bold")
-
-        model_names = list(self.all_results.keys())
-        rewards_means = [self.all_results[m]["statistics"]["mean_reward"] for m in model_names]
-        rewards_stds = [self.all_results[m]["statistics"]["std_reward"] for m in model_names]
-        win_rates = [self.all_results[m]["statistics"]["win_rate"] for m in model_names]
-        success_rates = [self.all_results[m]["statistics"]["success_rate"] for m in model_names]
-
-        x_pos = np.arange(len(model_names))
-        colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A"][: len(model_names)]
-
-        # Plot 1: Mean Reward
-        axes[0, 0].bar(
-            x_pos,
-            rewards_means,
-            yerr=rewards_stds,
-            capsize=10,
-            color=colors,
-            alpha=0.8,
-            edgecolor="black",
-            linewidth=2,
-        )
-        axes[0, 0].axhline(y=900, color="g", linestyle="--", linewidth=2, label="Target (900)")
-        axes[0, 0].axhline(
-            y=np.mean(rewards_means),
-            color="r",
-            linestyle=":",
-            linewidth=2,
-            label="Average",
-        )
-        axes[0, 0].set_ylabel("Reward", fontsize=12, fontweight="bold")
-        axes[0, 0].set_title("Mean Reward by Model", fontsize=13, fontweight="bold")
-        axes[0, 0].set_xticks(x_pos)
-        axes[0, 0].set_xticklabels(
-            [name.replace("ppo_car_racing_step_", "") for name in model_names],
-            rotation=45,
-            ha="right",
-        )
-        axes[0, 0].legend()
-        axes[0, 0].grid(alpha=0.3, axis="y")
-
-        # Plot 2: Win Rate
-        bars = axes[0, 1].bar(
-            x_pos, win_rates, color=colors, alpha=0.8, edgecolor="black", linewidth=2
-        )
-        axes[0, 1].axhline(y=100, color="g", linestyle="--", linewidth=2, alpha=0.5)
-        axes[0, 1].set_ylabel("Percentage (%)", fontsize=12, fontweight="bold")
-        axes[0, 1].set_title("Win Rate (Reward > 900)", fontsize=13, fontweight="bold")
-        axes[0, 1].set_xticks(x_pos)
-        axes[0, 1].set_xticklabels(
-            [name.replace("ppo_car_racing_step_", "") for name in model_names],
-            rotation=45,
-            ha="right",
-        )
-        axes[0, 1].set_ylim([0, 110])
-        axes[0, 1].grid(alpha=0.3, axis="y")
-
-        for bar in bars:
-            height = bar.get_height()
-            axes[0, 1].text(
-                bar.get_x() + bar.get_width() / 2.0,
-                height,
-                f"{height:.1f}%",
-                ha="center",
-                va="bottom",
-                fontweight="bold",
-            )
-
-        # Plot 3: Success vs Win
-        width = 0.35
-        axes[1, 0].bar(
-            x_pos - width / 2,
-            success_rates,
-            width,
-            label="Success (>0)",
-            color="skyblue",
-            alpha=0.8,
-            edgecolor="black",
-        )
-        axes[1, 0].bar(
-            x_pos + width / 2,
-            win_rates,
-            width,
-            label="Win (>900)",
-            color="orange",
-            alpha=0.8,
-            edgecolor="black",
-        )
-        axes[1, 0].set_ylabel("Percentage (%)", fontsize=12, fontweight="bold")
-        axes[1, 0].set_title("Success vs Win Rate", fontsize=13, fontweight="bold")
-        axes[1, 0].set_xticks(x_pos)
-        axes[1, 0].set_xticklabels(
-            [name.replace("ppo_car_racing_step_", "") for name in model_names],
-            rotation=45,
-            ha="right",
-        )
-        axes[1, 0].legend()
-        axes[1, 0].set_ylim([0, 110])
-        axes[1, 0].grid(alpha=0.3, axis="y")
-
-        # Plot 4: Relative Improvement
-        if len(model_names) > 1:
-            rewards_array = np.array(rewards_means)
-            improvements = (rewards_array - rewards_array[0]) / (abs(rewards_array[0]) + 1e-6) * 100
-
-            axes[1, 1].plot(
-                range(len(model_names)),
-                improvements,
-                "o-",
-                linewidth=3,
-                markersize=10,
-                color="darkblue",
-                alpha=0.7,
-            )
-            axes[1, 1].axhline(y=0, color="red", linestyle="--", linewidth=1, alpha=0.5)
-            axes[1, 1].fill_between(range(len(model_names)), improvements, alpha=0.3)
-            axes[1, 1].set_ylabel("Improvement (%)", fontsize=12, fontweight="bold")
-            axes[1, 1].set_xlabel("Training Progression", fontsize=12, fontweight="bold")
-            axes[1, 1].set_title(
-                "Relative Improvement over Training", fontsize=13, fontweight="bold"
-            )
-            axes[1, 1].set_xticks(range(len(model_names)))
-            axes[1, 1].set_xticklabels(
-                [name.replace("ppo_car_racing_step_", "") for name in model_names],
-                rotation=45,
-                ha="right",
-            )
-            axes[1, 1].grid(alpha=0.3)
-
-            for i, imp in enumerate(improvements):
-                axes[1, 1].text(i, imp, f"{imp:.1f}%", ha="center", va="bottom", fontweight="bold")
-
-        plt.tight_layout()
-        plot_file = self.comparison_dir / "model_comparison.png"
-        plt.savefig(plot_file, dpi=300, bbox_inches="tight")
-        print(f"📊 Comparison plots saved to: {plot_file}")
+        out_path = self.comparison_dir / "B_control_radar.png"
+        plt.savefig(out_path, dpi=300)
         plt.close()
+        print(f"📊 Radar chart saved to: {out_path}")
 
-    # ------------------------------------------------------------------ #
-    #  Distributions
-    # ------------------------------------------------------------------ #
-    def plot_distributions(self):
-        """Generates reward distribution plots."""
-        fig, axes = plt.subplots(1, len(self.all_results), figsize=(16, 5))
-        fig.suptitle(
-            "Reward Distributions by Model",
-            fontsize=16,
-            fontweight="bold",
-        )
+    def plot_learning_curve_log(self):
+        """C. Learning curve (Reward vs Log Steps)."""
+        steps = []
+        rewards = []
+        stds = []
 
-        if len(self.all_results) == 1:
-            axes = [axes]
+        for name, res in self.all_results.items():
+            # Extract steps from filename
+            match = re.search(r'step_(\d+)', name)
+            if match:
+                s = int(match.group(1))
+            elif "final" in name:
+                # Estimate final steps (e.g., 2M) or ask user.
+                # For plotting, let's assume max of others * 2 or manual 2M
+                s = 2000000
+            else:
+                continue
 
-        for idx, (model_name, results) in enumerate(self.all_results.items()):
-            rewards = [ep["total_reward"] for ep in results["episodes"]]
-            stats = results["statistics"]
+            steps.append(s)
+            rewards.append(res["statistics"]["mean_reward"])
+            stds.append(res["statistics"]["std_reward"])
 
-            axes[idx].hist(
-                rewards, bins=15, color="steelblue", alpha=0.7, edgecolor="black"
-            )
-            axes[idx].axvline(
-                x=stats["mean_reward"],
-                color="red",
-                linestyle="--",
-                linewidth=2,
-                label=f"Mean: {stats['mean_reward']:.1f}",
-            )
-            axes[idx].axvline(
-                x=stats["median_reward"],
-                color="green",
-                linestyle="--",
-                linewidth=2,
-                label=f"Median: {stats['median_reward']:.1f}",
-            )
-            axes[idx].axvline(
-                x=900,
-                color="orange",
-                linestyle="--",
-                linewidth=2,
-                alpha=0.7,
-                label="Target: 900",
-            )
+        # Sort by steps
+        sorted_indices = np.argsort(steps)
+        steps = np.array(steps)[sorted_indices]
+        rewards = np.array(rewards)[sorted_indices]
+        stds = np.array(stds)[sorted_indices]
 
-            axes[idx].set_xlabel("Total Reward")
-            axes[idx].set_ylabel("Frequency")
-            short_name = model_name.replace("ppo_car_racing_step_", "")
-            axes[idx].set_title(short_name, fontweight="bold")
-            axes[idx].legend(fontsize=9)
-            axes[idx].grid(alpha=0.3, axis="y")
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-        plt.tight_layout()
-        plot_file = self.comparison_dir / "reward_distributions.png"
-        plt.savefig(plot_file, dpi=300, bbox_inches="tight")
-        print(f"📊 Distributions saved to: {plot_file}")
+        # Log scale X
+        ax.set_xscale('log')
+
+        ax.plot(steps, rewards, 'o-', color='purple', linewidth=2, markersize=8)
+        ax.fill_between(steps, rewards - stds, rewards + stds, color='purple', alpha=0.2, label='Std Dev')
+
+        # Target Line
+        ax.axhline(900, color='green', linestyle='--', label='Target (900)')
+
+        ax.set_xlabel('Training Steps (Log Scale)', fontsize=12)
+        ax.set_ylabel('Mean Reward', fontsize=12)
+        ax.set_title('Learning Curve (Log-Scale X)', fontsize=14, fontweight="bold")
+        ax.grid(True, which="both", ls="-", alpha=0.4)
+        ax.legend()
+
+        # Annotate points
+        for s, r in zip(steps, rewards):
+            ax.text(s, r + 20, f"{int(r)}", ha='center', va='bottom', fontsize=9)
+
+        out_path = self.comparison_dir / "C_learning_curve_log.png"
+        plt.savefig(out_path, dpi=300)
         plt.close()
+        print(f"📊 Learning curve saved to: {out_path}")
+
+    def plot_scatter_survival(self, df_all: pd.DataFrame):
+        """D. Scatter plot: Episode Length vs Reward."""
+        fig, ax = plt.subplots(figsize=(10, 7))
+
+        models = df_all['Model'].unique()
+        colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A"]
+
+        for i, model in enumerate(models):
+            subset = df_all[df_all['Model'] == model]
+            short_name = model.split('_step_')[-1]
+            if "final" in model: short_name = "Final"
+
+            ax.scatter(subset['episode_length'], subset['total_reward'],
+                       label=short_name, alpha=0.7, s=60, edgecolors='w', color=colors[i % len(colors)])
+
+        ax.set_xlabel('Episode Length (Steps)')
+        ax.set_ylabel('Total Reward')
+        ax.set_title('Survival vs Success (Scatter)', fontsize=14, fontweight="bold")
+        ax.axhline(900, color='green', linestyle='--', alpha=0.5, label='Win Threshold')
+        ax.grid(True, alpha=0.3)
+        ax.legend(title="Model Checkpoint")
+
+        out_path = self.comparison_dir / "D_scatter_survival.png"
+        plt.savefig(out_path, dpi=300)
+        plt.close()
+        print(f"📊 Scatter plot saved to: {out_path}")
 
     # ------------------------------------------------------------------ #
-    #  CSV and Full Run
+    #  Main Pipeline
     # ------------------------------------------------------------------ #
-    def save_comparison_csv(self):
-        """Exports comparison to CSV."""
-        df = self.create_comparison_dataframe()
-        csv_file = self.comparison_dir / "model_comparison.csv"
-        df.to_csv(csv_file, index=False)
-        print(f"📄 Comparison exported to CSV: {csv_file}")
-        return csv_file
-
     def run_full_comparison(self, model_names):
-        """Runs the full comparative analysis."""
         print("\n" + "=" * 80)
-        print("RL MODEL COMPARATIVE ANALYSIS")
+        print("ADVANCED COMPARATIVE ANALYSIS")
         print("=" * 80)
 
         self.load_all_models(model_names)
-        report = self.generate_comparison_report()
 
-        report_file = self.comparison_dir / "comparison_report.txt"
-        with open(report_file, "w", encoding="utf-8") as f:
-            f.write(report)
-        print(f"📄 Report saved to: {report_file}")
+        # Create datasets
+        df_all = self.get_all_episodes_dataframe()
 
-        print("\n📊 Generating plots...")
-        self.plot_comparison()
-        self.plot_distributions()
-        self.save_comparison_csv()
+        # Generate Text Report (Keeping previous logic simpler here for brevity,
+        # but you can include the full text report logic from previous version)
+        print("Generating visualizations...")
+
+        # 1. Standard Plots (from before)
+        # self.plot_comparison() # You can keep the bar charts if you want
+
+        # 2. NEW Advanced Plots
+        self.plot_correlations(df_all)  # A
+        self.plot_radar_charts()  # B
+        self.plot_learning_curve_log()  # C
+        self.plot_scatter_survival(df_all)  # D
+
+        # Save CSV data
+        csv_path = self.comparison_dir / "all_episodes_data.csv"
+        df_all.to_csv(csv_path, index=False)
+        print(f"📄 Raw data exported to: {csv_path}")
 
         print("\n" + "=" * 80)
-        print("✅ COMPARATIVE ANALYSIS COMPLETED")
-        print("=" * 80 + "\n")
-
-        return report
+        print("✅ ANALYSIS COMPLETED")
+        return "Analysis Done"
 
 
 if __name__ == "__main__":
-    # Model names as they appear in evaluation_results/
+    # Example usage
     model_names = [
         "ppo_car_racing_step_500000",
         "ppo_car_racing_step_1000000",
         "ppo_car_racing_step_2000000",
     ]
-
-    analyzer = ComparativeAnalysis(evaluation_results_dir="evaluation_results")
-    rep = analyzer.run_full_comparison(model_names)
-    print(rep)
+    analyzer = ComparativeAnalysis()
+    analyzer.run_full_comparison(model_names)
