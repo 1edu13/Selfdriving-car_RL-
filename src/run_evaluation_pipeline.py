@@ -32,9 +32,9 @@ def main():
     # CAMBIAR ESTAS RUTAS A TUS MODELOS REALES
     
     models_to_evaluate = {
-        'ppo_car_racing_step_500000': r'C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_491520.pth',
-        'ppo_car_racing_step_1000000': r'C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth',
-        'ppo_car_racing_step_2000000': r'C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_final.pth',
+        'ppo_car_racing_step_500000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_491520.pth',
+        'ppo_car_racing_step_1000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth',
+        'ppo_car_racing_step_2000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_final.pth',
     }
     
     # ========== PARÁMETROS DE EVALUACIÓN ==========
