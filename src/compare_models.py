@@ -569,7 +569,7 @@ Win Rate Improvement:  {last_stats['win_rate'] - first_stats['win_rate']:>10.1f}
 
 
 if __name__ == "__main__":
-    # ========== CONFIGURATION ==========
+    # ========== CONFIGURATION ===========
 
     # Model names as they appear in the directories
     model_names = [
