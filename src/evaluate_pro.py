@@ -408,11 +408,11 @@ if __name__ == "__main__":
     model_500k = r"path/to/ppo_car_racing_step_512000.pth"
     model_1m = r"path/to/ppo_car_racing_step_1024000.pth"
     model_2m = r"path/to/ppo_car_racing_step_2048000.pth"
-    model_3m = r"../Models/models_T4/ppo_car_racing_final_3M.pth"
+    model_3m = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\ppo_car_racing_final_3M.pth"
 
     # Uncomment the model you want to evaluate:
     # evaluator = RobustEvaluator(modelo_500k, num_episodes=30)
     # evaluator = RobustEvaluator(modelo_1m, num_episodes=30)
-    evaluator = RobustEvaluator(model_2m, num_episodes=30)
+    evaluator = RobustEvaluator(model_3m, num_episodes=10)
 
     evaluator.run()

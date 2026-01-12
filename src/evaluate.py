@@ -74,5 +74,5 @@ if __name__ == "__main__":
 
     # Escribe aquí la ruta exacta de tu modelo entre comillas:
     # modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth"
-    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_81920.pth"
+    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\ppo_car_racing_final_3M.pth"
     evaluate(modelo_a_probar)

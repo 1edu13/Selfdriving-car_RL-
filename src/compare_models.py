@@ -575,7 +575,8 @@ if __name__ == "__main__":
     model_names = [
         "ppo_car_racing_step_500000",  # 500K steps
         "ppo_car_racing_step_1000000",  # 1M steps
-        "ppo_car_racing_step_2000000"  # 2M steps
+        "ppo_car_racing_step_2000000",  # 2M steps
+        "ppo_car_racing_final_3M"
     ]
 
     # Run analysis

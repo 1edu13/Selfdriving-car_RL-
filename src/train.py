@@ -191,7 +191,7 @@ def train():
             print(f"Model saved at step {global_step}")
 
     # Save final model
-    torch.save(agent.state_dict(), "../Models/models_T4/ppo_car_racing_final_3M.pth")
+    torch.save(agent.state_dict(), "../Models/models_T4/model_3000k.pth")
     envs.close()
     print("Training Completed.")
 

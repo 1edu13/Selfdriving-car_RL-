@@ -20,7 +20,7 @@ def make_env(env_id, seed, idx, capture_video, run_name):
 
         # Wrapper to record videos_T1 (optional, usually for evaluation or the first env)
         if capture_video and idx == 0:
-            env = gym.wrappers.RecordVideo(env, f"videos_T3/{run_name}")
+            env = gym.wrappers.RecordVideo(env, f"videos_T4/{run_name}")
 
         # 1. Grayscale Conversion
         # Transforms (96, 96, 3) -> (96, 96)
