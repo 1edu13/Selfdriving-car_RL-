@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MASTER SCRIPT - Full Evaluation Pipeline
+MASTER SCRIPT - Full Evaluation Pipeline (7-Model Comparison)
 Self-Driving Car using Reinforcement Learning
 """
 
@@ -23,56 +23,91 @@ def main():
     print_banner("EVALUATION PIPELINE - SELF-DRIVING CAR RL")
 
     # ========== CONFIGURATION ==========
+    # RUTAS DE LOS 7 MODELOS (AJUSTA LAS RUTAS REALES)
+    # Sugerencia: Usa nombres de clave que indiquen los pasos para ordenamiento automático
     models_to_evaluate = {
-        'ppo_car_racing_step_500000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_491520.pth',
-        'ppo_car_racing_step_1000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth',
-        'ppo_car_racing_step_2000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_final.pth',
+        # Fase Inicial (Aprendizaje básico)
+        'model_0200k': r'path/to/ppo_car_racing_step_204800.pth',
+
+        # Primer Progreso (El coche ya no gira en círculos)
+        'model_0500k': r'path/to/ppo_car_racing_step_491520.pth',  # Tu archivo anterior
+
+        # Punto Medio (Mejora rápida)
+        'model_1000k': r'path/to/ppo_car_racing_step_1064960.pth',  # Tu archivo anterior
+
+        # Transición (Convergencia)
+        'model_1500k': r'path/to/ppo_car_racing_step_1500000.pth',  # Aprox
+
+        # Pre-Saturación (Tu modelo "final" anterior, que era 2M)
+        'model_2000k': r'path/to/ppo_car_racing_final_previous.pth',
+
+        # Confirmación Rodilla
+        'model_2500k': r'path/to/ppo_car_racing_step_2500000.pth',
+
+        # Final Real (Saturación)
+        'model_3000k': r'path/to/ppo_car_racing_final_3M.pth',
     }
 
-    num_episodes = 30
-    seed = 100
+    num_episodes = 30  # Episodios por modelo
+    seed = 100  # Misma seed para todos
 
     # ========== PHASE 1: INDIVIDUAL EVALUATION ==========
     print_banner("PHASE 1: Individual Model Evaluation")
 
     evaluation_results = {}
 
-    for model_name, model_path in models_to_evaluate.items():
-        print(f"\n📊 Evaluating: {model_name}")
+    for model_key, model_path in models_to_evaluate.items():
+        print(f"\n📊 Evaluating: {model_key}")
+        print(f"   Path: {model_path}")
+
         if not Path(model_path).exists():
             print(f"⚠️  WARNING: File not found {model_path}")
+            print(f"   Skipping this model...")
             continue
 
         try:
+            # Usamos el nombre de la clave (model_0200k) como identificador de carpeta
+            # para mantener el orden limpio
             evaluator = RobustEvaluator(model_path, num_episodes, seed)
+            # Forzamos el nombre del modelo para que coincida con nuestra clave ordenada
+            evaluator.model_name = model_key
+            # Re-creamos directorios con el nuevo nombre
+            evaluator.output_dir = Path("evaluation_results") / model_key
+            evaluator.output_dir.mkdir(parents=True, exist_ok=True)
+            evaluator.videos_dir = evaluator.output_dir / "videos"
+            evaluator.videos_dir.mkdir(exist_ok=True)
+
             all_metrics, stats = evaluator.run()
-            evaluation_results[model_name] = True
+            evaluation_results[model_key] = True
+
         except Exception as e:
-            print(f"❌ Error: {e}")
+            print(f"❌ Error evaluating {model_key}: {e}")
             continue
 
     if not evaluation_results:
-        print("❌ No models evaluated.")
+        print("❌ No models evaluated. Check your paths.")
         return False
 
     # ========== PHASE 2: COMPARATIVE ANALYSIS ==========
     print_banner("PHASE 2: Advanced Comparative Analysis")
 
     try:
+        # Pasamos la lista ordenada de claves para que los gráficos salgan en orden (200->3M)
+        sorted_models = sorted(list(evaluation_results.keys()))
+
         analyzer = ComparativeAnalysis(evaluation_results_dir="evaluation_results")
-        analyzer.run_full_comparison(list(evaluation_results.keys()))
+        analyzer.run_full_comparison(sorted_models)
+
     except Exception as e:
         print(f"❌ Error in analysis: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
     # ========== SUMMARY ==========
     print_banner("✅ PIPELINE COMPLETED")
-    print("\n📁 NEW VISUALIZATIONS GENERATED (in comparison_analysis/):")
-    print("   1. A_correlation_heatmap.png  (Metrics relationships)")
-    print("   2. B_control_radar.png        (Driving style profile)")
-    print("   3. C_learning_curve_log.png   (Training progress)")
-    print("   4. D_scatter_survival.png     (Episode length vs Reward)")
-    print("\n")
+    print(f"Evaluated {len(evaluation_results)} models successfully.")
+    print("Check 'comparison_analysis/' for the new 7-model charts.")
 
     return True
 
