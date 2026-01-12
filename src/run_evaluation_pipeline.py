@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
 """
-SCRIPT MAESTRO - Pipeline Completo de Evaluación
+MASTER SCRIPT - Full Evaluation Pipeline
 Self-Driving Car using Reinforcement Learning
 
-Ejecuta evaluación de todos los modelos y genera reportes comparativos.
+Executes evaluation for all models and generates comparative reports.
 """
 
 import sys
 import os
 from pathlib import Path
 
-# Importar evaluadores
+# Import evaluators
 from evaluate_pro import RobustEvaluator
 from compare_models import ComparativeAnalysis
 
 
 def print_banner(title):
-    """Imprime un banner formateado."""
+    """Prints a formatted banner."""
     width = 80
     print("\n" + "=" * width)
     print(f"{title.center(width)}")
@@ -24,140 +24,140 @@ def print_banner(title):
 
 
 def main():
-    """Ejecuta el pipeline completo de evaluación."""
-    
-    print_banner("PIPELINE DE EVALUACIÓN - SELF-DRIVING CAR RL")
-    
-    # ========== CONFIGURACIÓN DE MODELOS ==========
-    # CAMBIAR ESTAS RUTAS A TUS MODELOS REALES
-    
+    """Runs the full evaluation pipeline."""
+
+    print_banner("EVALUATION PIPELINE - SELF-DRIVING CAR RL")
+
+    # ========== MODEL CONFIGURATION ==========
+    # CHANGE THESE PATHS TO YOUR ACTUAL MODELS
+
     models_to_evaluate = {
         'ppo_car_racing_step_500000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_491520.pth',
         'ppo_car_racing_step_1000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth',
         'ppo_car_racing_step_2000000': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_final.pth',
     }
-    
-    # ========== PARÁMETROS DE EVALUACIÓN ==========
-    num_episodes = 30  # Episodios por modelo
-    seed = 100         # Seed para reproducibilida
-    
-    # ========== FASE 1: EVALUAR CADA MODELO ==========
-    
-    print_banner("FASE 1: Evaluación de Modelos Individuales")
-    
+
+    # ========== EVALUATION PARAMETERS ==========
+    num_episodes = 30  # Episodes per model
+    seed = 100  # Seed for reproducibility
+
+    # ========== PHASE 1: EVALUATE INDIVIDUAL MODELS ==========
+
+    print_banner("PHASE 1: Individual Model Evaluation")
+
     evaluation_results = {}
-    
+
     for model_name, model_path in models_to_evaluate.items():
-        print(f"\n📊 Evaluando: {model_name}")
-        print(f"   Archivo: {model_path}")
+        print(f"\n📊 Evaluating: {model_name}")
+        print(f"   File: {model_path}")
         print("-" * 80)
-        
-        # Verificar que el archivo existe
+
+        # Verify file exists
         if not Path(model_path).exists():
-            print(f"⚠️  ADVERTENCIA: No se encontró el archivo {model_path}")
-            print(f"   Por favor, actualiza la ruta en el script.")
+            print(f"⚠️  WARNING: File not found {model_path}")
+            print(f"   Please update the path in the script.")
             continue
-        
+
         try:
-            # Crear evaluador
+            # Create evaluator
             evaluator = RobustEvaluator(
                 model_path=model_path,
                 num_episodes=num_episodes,
                 seed=seed
             )
-            
-            # Ejecutar evaluación
+
+            # Run evaluation
             all_metrics, stats = evaluator.run()
-            
+
             evaluation_results[model_name] = {
                 'metrics': all_metrics,
                 'stats': stats
             }
-            
-            print(f"\n✅ {model_name} evaluado exitosamente")
-            
+
+            print(f"\n✅ {model_name} evaluated successfully")
+
         except Exception as e:
-            print(f"\n❌ Error evaluando {model_name}:")
+            print(f"\n❌ Error evaluating {model_name}:")
             print(f"   {str(e)}")
             continue
-    
+
     if not evaluation_results:
         print("\n" + "!" * 80)
-        print("ERROR: No se pudo evaluar ningún modelo.")
-        print("Por favor, verifica las rutas de los modelos en la configuración.")
+        print("ERROR: No models could be evaluated.")
+        print("Please check the model paths in the configuration.")
         print("!" * 80)
         return False
-    
-    # ========== FASE 2: ANÁLISIS COMPARATIVO ==========
-    
-    print_banner("FASE 2: Análisis Comparativo")
-    
+
+    # ========== PHASE 2: COMPARATIVE ANALYSIS ==========
+
+    print_banner("PHASE 2: Comparative Analysis")
+
     try:
-        # Crear analizador
+        # Create analyzer
         analyzer = ComparativeAnalysis(evaluation_results_dir="evaluation_results")
-        
-        # Cargar modelos evaluados
+
+        # Load evaluated models
         model_names = list(evaluation_results.keys())
-        
-        # Ejecutar análisis completo
+
+        # Run full analysis
         report = analyzer.run_full_comparison(model_names)
-        
+
         print(report)
-        
+
     except Exception as e:
-        print(f"\n❌ Error en análisis comparativo:")
+        print(f"\n❌ Error in comparative analysis:")
         print(f"   {str(e)}")
         return False
-    
-    # ========== RESUMEN FINAL ==========
-    
-    print_banner("✅ PIPELINE COMPLETADO")
-    
-    print("\n📁 ARCHIVOS GENERADOS:\n")
-    
-    print("  RESULTADOS INDIVIDUALES:")
+
+    # ========== FINAL SUMMARY ==========
+
+    print_banner("✅ PIPELINE COMPLETED")
+
+    print("\n📁 GENERATED FILES:\n")
+
+    print("  INDIVIDUAL RESULTS:")
     print("  └─ evaluation_results/")
     for model_name in evaluation_results.keys():
         print(f"      ├─ {model_name}/")
-        print(f"      │   ├─ results.json          (Datos detallados)")
-        print(f"      │   ├─ evaluation_plots.png  (Gráficos)")
-        print(f"      │   ├─ report.txt            (Reporte textual)")
-        print(f"      │   └─ videos/               (Videos de episodios)")
-    
-    print("\n  ANÁLISIS COMPARATIVO:")
+        print(f"      │   ├─ results.json          (Detailed data)")
+        print(f"      │   ├─ evaluation_plots.png  (Performance plots)")
+        print(f"      │   ├─ report.txt            (Text report)")
+        print(f"      │   └─ videos/               (Episode videos)")
+
+    print("\n  COMPARATIVE ANALYSIS:")
     print("  └─ comparison_analysis/")
-    print("      ├─ model_comparison.png         (Gráficos comparativos)")
-    print("      ├─ reward_distributions.png     (Distribuciones)")
-    print("      ├─ comparison_report.txt        (Reporte comparativo)")
-    print("      └─ model_comparison.csv         (Datos en CSV)")
-    
+    print("      ├─ model_comparison.png         (Comparative plots)")
+    print("      ├─ reward_distributions.png     (Distributions)")
+    print("      ├─ comparison_report.txt        (Comparative report)")
+    print("      └─ model_comparison.csv         (Data in CSV)")
+
     print("\n" + "=" * 80)
-    print("📊 PRÓXIMOS PASOS PARA TU PRESENTACIÓN:")
+    print("📊 NEXT STEPS FOR YOUR PRESENTATION:")
     print("=" * 80)
     print("""
-1. DOCUMENTACIÓN:
-   - Copia comparison_report.txt a tu documentación
-   - Incluye las gráficas (model_comparison.png, reward_distributions.png)
-   - Genera un PDF con los resultados
+1. DOCUMENTATION:
+   - Copy 'comparison_report.txt' to your documentation.
+   - Include graphs ('model_comparison.png', 'reward_distributions.png').
+   - Generate a PDF with the results.
 
-2. PRESENTACIÓN:
-   - Usa los videos de evaluation_results/*/videos/ en tu presentación
-   - Incluye los gráficos de comparativa
-   - Prepara un resumen de hallazgos principales
+2. PRESENTATION:
+   - Use videos from 'evaluation_results/*/videos/' in your slides.
+   - Include comparison plots.
+   - Prepare a summary of key findings.
 
-3. ANÁLISIS:
-   - Identifica qué modelo tiene mejor rendimiento
-   - Analiza la estabilidad (desviación estándar)
-   - Documenta lecciones aprendidas
+3. ANALYSIS:
+   - Identify the model with the best performance.
+   - Analyze stability (standard deviation).
+   - Document lessons learned.
 
-4. MEJORAS FUTURAS:
-   - Considera entrenamiento adicional si no alcanzas 900
-   - Ajusta hyperparámetros basado en los resultados
-   - Experimenta con diferentes seeds para robustez
+4. FUTURE IMPROVEMENTS:
+   - Consider additional training if target (900) is not met.
+   - Adjust hyperparameters based on results.
+   - Experiment with different seeds for robustness.
     """)
-    
+
     print("=" * 80 + "\n")
-    
+
     return True
 
 

@@ -14,16 +14,16 @@ from utils import make_env, get_device
 
 class RobustEvaluator:
     """
-    Evaluador profesional para modelos PPO en CarRacing-v2.
-    Captura métricas detalladas, videos y genera reportes.
+    Professional evaluator for PPO models on CarRacing-v2.
+    Captures detailed metrics, videos, and generates reports.
     """
 
     def __init__(self, model_path: str, num_episodes: int = 30, seed: int = 100):
         """
         Args:
-            model_path (str): Ruta al archivo .pth del modelo.
-            num_episodes (int): Número de episodios a evaluar.
-            seed (int): Seed para reproducibilidad.
+            model_path (str): Path to the model .pth file.
+            num_episodes (int): Number of episodes to evaluate.
+            seed (int): Seed for reproducibility.
         """
         self.model_path = model_path
         self.num_episodes = num_episodes
@@ -31,35 +31,35 @@ class RobustEvaluator:
         self.device = get_device()
         self.model_name = os.path.basename(model_path).replace(".pth", "")
 
-        # Directorios de salida
+        # Output directories
         self.output_dir = Path("evaluation_results") / self.model_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.videos_dir = self.output_dir / "videos"
         self.videos_dir.mkdir(exist_ok=True)
 
         print(f"\n{'='*60}")
-        print("Evaluador RL - Self-Driving Car")
+        print("RL Evaluator - Self-Driving Car")
         print(f"{'='*60}")
-        print(f"Modelo: {self.model_name}")
+        print(f"Model: {self.model_name}")
         print(f"Device: {self.device}")
-        print(f"Episodios: {self.num_episodes}")
+        print(f"Episodes: {self.num_episodes}")
         print(f"Seed: {self.seed}")
-        print(f"Directorio de salida: {self.output_dir}")
+        print(f"Output Directory: {self.output_dir}")
         print(f"{'='*60}\n")
 
     # --------------------------------------------------------------------- #
-    #  Carga del agente
+    #  Load Agent
     # --------------------------------------------------------------------- #
     def load_agent(self) -> Agent:
-        """Carga el modelo entrenado."""
-        # Crear ambiente dummy para obtener las formas correctas
+        """Loads the trained model."""
+        # Create dummy env to get correct shapes
         dummy_env = make_env(
             "CarRacing-v2", seed=self.seed, idx=0,
             capture_video=False, run_name="dummy"
         )()
         dummy_envs = gym.vector.SyncVectorEnv([lambda: dummy_env])
 
-        # Inicializar y cargar agente
+        # Initialize and load agent
         agent = Agent(dummy_envs).to(self.device)
         agent.load_state_dict(torch.load(self.model_path, map_location=self.device))
         agent.eval()
@@ -68,15 +68,15 @@ class RobustEvaluator:
         return agent
 
     # --------------------------------------------------------------------- #
-    #  Evaluación de un episodio
+    #  Episode Evaluation
     # --------------------------------------------------------------------- #
     def evaluate_episode(self, agent: Agent, episode_num: int,
                          capture_video: bool = True) -> dict:
         """
-        Ejecuta un episodio y captura métricas detalladas.
+        Runs a single episode and captures detailed metrics.
 
         Returns:
-            dict: Métricas del episodio.
+            dict: Episode metrics.
         """
         run_name = f"eval_{self.model_name}_ep{episode_num:03d}"
 
@@ -108,7 +108,7 @@ class RobustEvaluator:
 
         with torch.no_grad():
             while not done:
-                # Acción determinística: media de la política
+                # Deterministic action: policy mean
                 hidden = agent.network(obs / 255.0)
                 action_mean = agent.actor_mean(hidden)
 
@@ -127,7 +127,7 @@ class RobustEvaluator:
 
         env.close()
 
-        # Compilar métricas
+        # Compile metrics
         metrics = {
             "episode_num": episode_num,
             "total_reward": float(episode_reward),
@@ -162,18 +162,18 @@ class RobustEvaluator:
         return metrics
 
     # --------------------------------------------------------------------- #
-    #  Evaluación completa
+    #  Full Evaluation Loop
     # --------------------------------------------------------------------- #
     def run_full_evaluation(self):
-        """Ejecuta la evaluación completa de todos los episodios."""
-        print("Cargando modelo...")
+        """Runs evaluation for all episodes."""
+        print("Loading model...")
         agent = self.load_agent()
 
         all_metrics = []
-        print(f"\nEjecutando {self.num_episodes} episodios...\n")
+        print(f"\nRunning {self.num_episodes} episodes...\n")
 
         for ep in range(self.num_episodes):
-            capture_video = (ep % 5 == 0)  # capturar vídeo cada 5 episodios
+            capture_video = (ep % 5 == 0)  # Capture video every 5 episodes
             metrics = self.evaluate_episode(agent, ep, capture_video=capture_video)
             all_metrics.append(metrics)
 
@@ -189,11 +189,11 @@ class RobustEvaluator:
         return all_metrics
 
     # --------------------------------------------------------------------- #
-    #  Estadísticas agregadas
+    #  Aggregated Statistics
     # --------------------------------------------------------------------- #
     @staticmethod
     def compute_statistics(all_metrics):
-        """Calcula estadísticas agregadas."""
+        """Computes aggregated statistics."""
         rewards = [m["total_reward"] for m in all_metrics]
         lengths = [m["episode_length"] for m in all_metrics]
 
@@ -218,10 +218,10 @@ class RobustEvaluator:
         return stats
 
     # --------------------------------------------------------------------- #
-    #  Guardar resultados
+    #  Save Results
     # --------------------------------------------------------------------- #
     def save_results(self, all_metrics, stats):
-        """Guarda los resultados en JSON."""
+        """Saves results to JSON."""
         results = {
             "model": self.model_name,
             "evaluation_date": datetime.now().isoformat(),
@@ -236,37 +236,37 @@ class RobustEvaluator:
         with open(results_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
 
-        print(f"\n✅ Resultados guardados en: {results_file}")
+        print(f"\n✅ Results saved to: {results_file}")
         return results_file
 
     # --------------------------------------------------------------------- #
-    #  Gráficos
+    #  Plots
     # --------------------------------------------------------------------- #
     def generate_plots(self, all_metrics, stats):
-        """Genera gráficos para visualización."""
+        """Generates visualization plots."""
         fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle(f"Evaluación: {self.model_name}", fontsize=16, fontweight="bold")
+        fig.suptitle(f"Evaluation: {self.model_name}", fontsize=16, fontweight="bold")
 
         rewards = [m["total_reward"] for m in all_metrics]
         lengths = [m["episode_length"] for m in all_metrics]
         episodes = list(range(1, len(rewards) + 1))
 
-        # Plot 1: Recompensas por episodio
+        # Plot 1: Rewards per Episode
         axes[0, 0].plot(episodes, rewards, "b-o", alpha=0.7)
         axes[0, 0].axhline(
             y=stats["mean_reward"],
             color="r",
             linestyle="--",
-            label=f"Media: {stats['mean_reward']:.1f}",
+            label=f"Mean: {stats['mean_reward']:.1f}",
         )
-        axes[0, 0].axhline(y=900, color="g", linestyle="--", label="Objetivo (900)")
-        axes[0, 0].set_xlabel("Episodio")
-        axes[0, 0].set_ylabel("Recompensa Total")
-        axes[0, 0].set_title("Recompensa por Episodio")
+        axes[0, 0].axhline(y=900, color="g", linestyle="--", label="Target (900)")
+        axes[0, 0].set_xlabel("Episode")
+        axes[0, 0].set_ylabel("Total Reward")
+        axes[0, 0].set_title("Reward per Episode")
         axes[0, 0].legend()
         axes[0, 0].grid(alpha=0.3)
 
-        # Plot 2: Histograma de recompensas
+        # Plot 2: Reward Histogram
         axes[0, 1].hist(
             rewards, bins=15, color="steelblue", edgecolor="black", alpha=0.7
         )
@@ -275,29 +275,29 @@ class RobustEvaluator:
             color="r",
             linestyle="--",
             linewidth=2,
-            label=f"Media: {stats['mean_reward']:.1f}",
+            label=f"Mean: {stats['mean_reward']:.1f}",
         )
-        axes[0, 1].set_xlabel("Recompensa Total")
-        axes[0, 1].set_ylabel("Frecuencia")
-        axes[0, 1].set_title("Distribución de Recompensas")
+        axes[0, 1].set_xlabel("Total Reward")
+        axes[0, 1].set_ylabel("Frequency")
+        axes[0, 1].set_title("Reward Distribution")
         axes[0, 1].legend()
         axes[0, 1].grid(alpha=0.3)
 
-        # Plot 3: Longitud de episodios
+        # Plot 3: Episode Length
         axes[1, 0].plot(episodes, lengths, "g-o", alpha=0.7)
         axes[1, 0].axhline(
             y=stats["mean_length"],
             color="r",
             linestyle="--",
-            label=f"Media: {stats['mean_length']:.0f}",
+            label=f"Mean: {stats['mean_length']:.0f}",
         )
-        axes[1, 0].set_xlabel("Episodio")
-        axes[1, 0].set_ylabel("Pasos")
-        axes[1, 0].set_title("Longitud de Episodio")
+        axes[1, 0].set_xlabel("Episode")
+        axes[1, 0].set_ylabel("Steps")
+        axes[1, 0].set_title("Episode Length")
         axes[1, 0].legend()
         axes[1, 0].grid(alpha=0.3)
 
-        # Plot 4: Estadísticas de control
+        # Plot 4: Control Statistics
         control_actions = ["Steering", "Throttle", "Brake"]
         control_values = [
             stats["steering_mean"],
@@ -313,68 +313,68 @@ class RobustEvaluator:
             alpha=0.7,
             edgecolor="black",
         )
-        axes[1, 1].set_ylabel("Valor Promedio")
-        axes[1, 1].set_title("Promedio de Acciones de Control")
+        axes[1, 1].set_ylabel("Average Value")
+        axes[1, 1].set_title("Average Control Actions")
         axes[1, 1].grid(alpha=0.3, axis="y")
         axes[1, 1].set_ylim([-0.5, 1.0])
 
         plt.tight_layout()
         plot_file = self.output_dir / "evaluation_plots.png"
         plt.savefig(plot_file, dpi=300, bbox_inches="tight")
-        print(f"📊 Gráficos guardados en: {plot_file}")
+        print(f"📊 Plots saved to: {plot_file}")
         plt.close()
 
     # --------------------------------------------------------------------- #
-    #  Reporte de texto
+    #  Text Report
     # --------------------------------------------------------------------- #
     def generate_report(self, stats):
-        """Genera un reporte de texto formateado."""
+        """Generates a formatted text report."""
         report = f"""
 ╔════════════════════════════════════════════════════════════════════╗
-║                  REPORTE DE EVALUACIÓN - MODELO RL                ║
+║                  EVALUATION REPORT - RL MODEL                      ║
 ╚════════════════════════════════════════════════════════════════════╝
 
-📋 INFORMACIÓN DEL MODELO
+📋 MODEL INFORMATION
 {'─' * 64}
-Nombre del Modelo:     {self.model_name}
-Archivo:               {self.model_path}
-Fecha de Evaluación:   {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Dispositivo:           {self.device}
+Model Name:            {self.model_name}
+File Path:             {self.model_path}
+Evaluation Date:       {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Device:                {self.device}
 
-📊 CONFIGURACIÓN DE EVALUACIÓN
+📊 EVALUATION CONFIGURATION
 {'─' * 64}
-Episodios Evaluados:   {self.num_episodes}
+Evaluated Episodes:    {self.num_episodes}
 Seed:                  {self.seed}
-Ambiente:              CarRacing-v2
-Video Capturado:       Sí (cada 5 episodios)
+Environment:           CarRacing-v2
+Video Captured:        Yes (every 5 episodes)
 
-📈 ESTADÍSTICAS DE RENDIMIENTO
+📈 PERFORMANCE STATISTICS
 {'─' * 64}
-Recompensa Media:      {stats['mean_reward']:>10.2f} ± {stats['std_reward']:.2f}
-Recompensa Mínima:     {stats['min_reward']:>10.2f}
-Recompensa Máxima:     {stats['max_reward']:>10.2f}
-Recompensa Mediana:    {stats['median_reward']:>10.2f}
+Mean Reward:           {stats['mean_reward']:>10.2f} ± {stats['std_reward']:.2f}
+Min Reward:            {stats['min_reward']:>10.2f}
+Max Reward:            {stats['max_reward']:>10.2f}
+Median Reward:         {stats['median_reward']:>10.2f}
 
-Tasa de Victoria (>900):  {stats['win_rate']:>6.1f}%
-Tasa de Éxito (>0):       {stats['success_rate']:>6.1f}%
+Win Rate (>900):       {stats['win_rate']:>6.1f}%
+Success Rate (>0):     {stats['success_rate']:>6.1f}%
 
-Pasos Promedio:        {stats['mean_length']:>10.1f} ± {stats['std_length']:.1f}
+Average Steps:         {stats['mean_length']:>10.1f} ± {stats['std_length']:.1f}
 
-🎮 ACCIONES DE CONTROL PROMEDIO
+🎮 AVERAGE CONTROL ACTIONS
 {'─' * 64}
-Dirección (Steering):  {stats['steering_mean']:>10.4f}
-Acelerador (Throttle): {stats['throttle_mean']:>10.4f}
-Freno (Brake):         {stats['brake_mean']:>10.4f}
+Steering:              {stats['steering_mean']:>10.4f}
+Throttle:              {stats['throttle_mean']:>10.4f}
+Brake:                 {stats['brake_mean']:>10.4f}
 
-💾 ARCHIVOS GENERADOS
+💾 GENERATED FILES
 {'─' * 64}
-✓ results.json              - Datos detallados (JSON)
-✓ evaluation_plots.png      - Gráficos de rendimiento
-✓ videos/                   - Videos de episodios seleccionados
-✓ report.txt                - Este reporte
+✓ results.json              - Detailed data (JSON)
+✓ evaluation_plots.png      - Performance plots
+✓ videos/                   - Episode videos
+✓ report.txt                - This report
 
 ╔════════════════════════════════════════════════════════════════════╗
-║                          FIN DEL REPORTE                          ║
+║                        END OF REPORT                               ║
 ╚════════════════════════════════════════════════════════════════════╝
 """
         report_file = self.output_dir / "report.txt"
@@ -382,13 +382,13 @@ Freno (Brake):         {stats['brake_mean']:>10.4f}
             f.write(report)
 
         print(report)
-        print(f"\n📄 Reporte guardado en: {report_file}")
+        print(f"\n📄 Report saved to: {report_file}")
 
     # --------------------------------------------------------------------- #
-    #  Pipeline completo
+    #  Full Pipeline
     # --------------------------------------------------------------------- #
     def run(self):
-        """Ejecuta el pipeline completo de evaluación."""
+        """Runs the full evaluation pipeline."""
         all_metrics = self.run_full_evaluation()
         stats = self.compute_statistics(all_metrics)
         self.save_results(all_metrics, stats)
@@ -396,21 +396,22 @@ Freno (Brake):         {stats['brake_mean']:>10.4f}
         self.generate_report(stats)
 
         print(f"\n{'='*60}")
-        print("✅ EVALUACIÓN COMPLETADA")
+        print("✅ EVALUATION COMPLETED")
         print(f"{'='*60}\n")
 
         return all_metrics, stats
 
 
 if __name__ == "__main__":
-    # ========== CONFIGURACIÓN MANUAL ==========
-    modelo_500k = r"path/to/ppo_car_racing_step_512000.pth"
-    modelo_1m = r"path/to/ppo_car_racing_step_1024000.pth"
-    modelo_2m = r"path/to/ppo_car_racing_step_2048000.pth"
+    # ========== MANUAL CONFIGURATION ==========
+    # Example paths (replace with actual paths if running standalone)
+    model_500k = r"path/to/ppo_car_racing_step_512000.pth"
+    model_1m = r"path/to/ppo_car_racing_step_1024000.pth"
+    model_2m = r"path/to/ppo_car_racing_step_2048000.pth"
 
-    # Descomenta el modelo que quieras evaluar:
+    # Uncomment the model you want to evaluate:
     # evaluator = RobustEvaluator(modelo_500k, num_episodes=30)
     # evaluator = RobustEvaluator(modelo_1m, num_episodes=30)
-    evaluator = RobustEvaluator(modelo_2m, num_episodes=30)
+    evaluator = RobustEvaluator(model_2m, num_episodes=30)
 
     evaluator.run()

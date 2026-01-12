@@ -9,14 +9,14 @@ import pandas as pd
 
 class ComparativeAnalysis:
     """
-    Analiza y compara resultados de evaluación de múltiples modelos.
-    Genera reportes comparativos y visualizaciones.
+    Analyzes and compares evaluation results from multiple models.
+    Generates comparative reports and visualizations.
     """
 
     def __init__(self, evaluation_results_dir: str = "evaluation_results"):
         """
         Args:
-            evaluation_results_dir (str): Directorio donde están los resultados.
+            evaluation_results_dir (str): Directory containing the results.
         """
         self.eval_dir = Path(evaluation_results_dir)
         self.comparison_dir = Path("comparison_analysis")
@@ -25,14 +25,14 @@ class ComparativeAnalysis:
         self.all_results = {}
 
     # ------------------------------------------------------------------ #
-    #  Carga de resultados
+    #  Load Results
     # ------------------------------------------------------------------ #
     def load_model_results(self, model_name: str):
-        """Carga los resultados de un modelo específico."""
+        """Loads results for a specific model."""
         results_file = self.eval_dir / model_name / "results.json"
 
         if not results_file.exists():
-            print(f"⚠️  No se encontró: {results_file}")
+            print(f"⚠️  Not found: {results_file}")
             return None
 
         with open(results_file, "r", encoding="utf-8") as f:
@@ -40,11 +40,11 @@ class ComparativeAnalysis:
         return results
 
     def load_all_models(self, model_names):
-        """Carga resultados de todos los modelos especificados."""
-        print("\n📂 Cargando resultados de modelos...")
+        """Loads results for all specified models."""
+        print("\n📂 Loading model results...")
 
         for model_name in model_names:
-            print(f"  Cargando: {model_name}...", end=" ")
+            print(f"  Loading: {model_name}...", end=" ")
             results = self.load_model_results(model_name)
             if results is not None:
                 self.all_results[model_name] = results
@@ -53,98 +53,98 @@ class ComparativeAnalysis:
                 print("❌")
 
         if not self.all_results:
-            raise ValueError("No se cargó ningún resultado válido")
+            raise ValueError("No valid results were loaded.")
 
-        print(f"\n✓ {len(self.all_results)} modelos cargados exitosamente\n")
+        print(f"\n✓ {len(self.all_results)} models loaded successfully\n")
 
     # ------------------------------------------------------------------ #
-    #  DataFrame comparativo
+    #  Comparison DataFrame
     # ------------------------------------------------------------------ #
     def create_comparison_dataframe(self) -> pd.DataFrame:
-        """Crea un DataFrame con las estadísticas de todos los modelos."""
+        """Creates a DataFrame with statistics from all models."""
         comparison_data = []
 
         for model_name, results in self.all_results.items():
             stats = results["statistics"]
             comparison_data.append(
                 {
-                    "Modelo": model_name,
-                    "Recompensa Media": stats["mean_reward"],
+                    "Model": model_name,
+                    "Mean Reward": stats["mean_reward"],
                     "Std Dev": stats["std_reward"],
                     "Min": stats["min_reward"],
                     "Max": stats["max_reward"],
-                    "Tasa Victoria (%)": stats["win_rate"],
-                    "Tasa Éxito (%)": stats["success_rate"],
-                    "Pasos Promedio": stats["mean_length"],
-                    "Episodios": results["num_episodes"],
+                    "Win Rate (%)": stats["win_rate"],
+                    "Success Rate (%)": stats["success_rate"],
+                    "Avg Steps": stats["mean_length"],
+                    "Episodes": results["num_episodes"],
                 }
             )
 
         return pd.DataFrame(comparison_data)
 
     # ------------------------------------------------------------------ #
-    #  Reporte textual
+    #  Text Report
     # ------------------------------------------------------------------ #
     def _format_table(self, df: pd.DataFrame) -> str:
-        """Formatea un DataFrame como tabla ASCII."""
+        """Formats a DataFrame as an ASCII table."""
         df_display = df.copy()
         for col in df_display.columns:
-            if col not in ("Modelo", "Episodios"):
+            if col not in ("Model", "Episodes"):
                 df_display[col] = df_display[col].round(2)
         return df_display.to_string(index=False)
 
     def generate_comparison_report(self) -> str:
-        """Genera un reporte textual comparativo."""
+        """Generates a textual comparison report."""
         df = self.create_comparison_dataframe()
 
         report = f"""
 ╔════════════════════════════════════════════════════════════════════════════╗
-║              ANÁLISIS COMPARATIVO DE MODELOS - SELF-DRIVING CAR            ║
+║                COMPARATIVE ANALYSIS - SELF-DRIVING CAR RL                  ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-📊 RESUMEN EJECUTIVO
+📊 EXECUTIVE SUMMARY
 {'─' * 80}
-Modelos Evaluados: {len(self.all_results)}
-Fecha de Análisis: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Evaluated Models:  {len(self.all_results)}
+Analysis Date:     {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ TABLA COMPARATIVA DE RENDIMIENTO                                          │
+│ PERFORMANCE COMPARISON TABLE                                               │
 └────────────────────────────────────────────────────────────────────────────┘
 
 {self._format_table(df)}
 
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                          ANÁLISIS DETALLADO                               ║
+║                          DETAILED ANALYSIS                                ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 """
 
-        # Análisis por modelo
+        # Analysis by model
         for model_name, results in self.all_results.items():
             stats = results["statistics"]
             report += f"""
 📌 {model_name.upper()}
 {'─' * 80}
-Episodios Evaluados:    {results['num_episodes']}
+Evaluated Episodes:     {results['num_episodes']}
 Device:                 {results['device']}
 Seed:                   {results['seed']}
 
-RENDIMIENTO:
-  • Recompensa Media:   {stats['mean_reward']:>8.2f} ± {stats['std_reward']:>6.2f}
-  • Rango:              [{stats['min_reward']:>7.1f}, {stats['max_reward']:>7.1f}]
-  • Mediana:            {stats['median_reward']:>8.2f}
-  • Tasa Victoria:      {stats['win_rate']:>8.1f}% (recompensa > 900)
-  • Tasa Éxito:         {stats['success_rate']:>8.1f}% (recompensa > 0)
+PERFORMANCE:
+  • Mean Reward:        {stats['mean_reward']:>8.2f} ± {stats['std_reward']:>6.2f}
+  • Range:              [{stats['min_reward']:>7.1f}, {stats['max_reward']:>7.1f}]
+  • Median:             {stats['median_reward']:>8.2f}
+  • Win Rate:           {stats['win_rate']:>8.1f}% (reward > 900)
+  • Success Rate:       {stats['success_rate']:>8.1f}% (reward > 0)
 
-DURACIÓN:
-  • Pasos Promedio:     {stats['mean_length']:>8.1f} ± {stats['std_length']:>6.1f}
+DURATION:
+  • Avg Steps:          {stats['mean_length']:>8.1f} ± {stats['std_length']:>6.1f}
 
 CONTROL:
-  • Dirección (mean):   {stats['steering_mean']:>8.4f}
-  • Acelerador (mean):  {stats['throttle_mean']:>8.4f}
-  • Freno (mean):       {stats['brake_mean']:>8.4f}
+  • Steering (mean):    {stats['steering_mean']:>8.4f}
+  • Throttle (mean):    {stats['throttle_mean']:>8.4f}
+  • Brake (mean):       {stats['brake_mean']:>8.4f}
 """
 
-        # Comparativa de mejora
+        # Improvement comparison
         model_names = list(self.all_results.keys())
         if len(model_names) > 1:
             first = self.all_results[model_names[0]]["statistics"]
@@ -157,57 +157,58 @@ CONTROL:
 
             report += f"""
 {'═' * 80}
-🚀 ANÁLISIS DE MEJORA (Primero vs Último)
+🚀 IMPROVEMENT ANALYSIS (First vs Last)
 {'─' * 80}
 
-Modelo Base:           {model_names[0]}
-Modelo Final:          {model_names[-1]}
+Base Model:            {model_names[0]}
+Final Model:           {model_names[-1]}
 
-Recompensa Base:       {first['mean_reward']:>10.2f}
-Recompensa Final:      {last['mean_reward']:>10.2f}
-Mejora Absoluta:       {last['mean_reward'] - first['mean_reward']:>10.2f}
-Mejora Relativa:       {improvement:>10.1f}%
+Base Reward:           {first['mean_reward']:>10.2f}
+Final Reward:          {last['mean_reward']:>10.2f}
+Absolute Improvement:  {last['mean_reward'] - first['mean_reward']:>10.2f}
+Relative Improvement:  {improvement:>10.1f}%
 
-Victoria Base:         {first['win_rate']:>10.1f}%
-Victoria Final:        {last['win_rate']:>10.1f}%
-Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
+Base Win Rate:         {first['win_rate']:>10.1f}%
+Final Win Rate:        {last['win_rate']:>10.1f}%
+Win Rate Improvement:  {last['win_rate'] - first['win_rate']:>10.1f}%
 
 {'═' * 80}
 """
 
         report += """
-💡 CONCLUSIONES Y RECOMENDACIONES
+💡 CONCLUSIONS AND RECOMMENDATIONS
 {'─' * 80}
 
-1. RENDIMIENTO GENERAL:
-   - Identificar el modelo con mayor recompensa media estable.
-   - Los modelos entrenados más tiempo tienden a ser más estables.
+1. OVERALL PERFORMANCE:
+   - Identify the model with the highest stable mean reward.
+   - Models trained longer tend to be more stable.
 
-2. ESTABILIDAD (Desviación Estándar):
-   - Menor desviación = comportamiento más predecible.
+2. STABILITY (Standard Deviation):
+   - Lower deviation = more predictable behavior.
 
-3. TASA DE VICTORIA:
-   - Objetivo: recompensa > 900.
+3. WIN RATE:
+   - Target: reward > 900.
 
-4. DURACIÓN DE EPISODIOS:
-   - Mayor duración indica que el agente se mantiene en pista.
+4. EPISODE DURATION:
+   - Longer duration (without reaching 1000 limit aimlessly) often indicates
+     the agent is staying on track.
 
-5. PATRONES DE CONTROL:
-   - Valores extremos de steering/brake pueden indicar conducción nerviosa.
+5. CONTROL PATTERNS:
+   - Extreme values for steering/brake might indicate jittery driving.
 
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                          FIN DEL ANÁLISIS                                 ║
+║                          END OF ANALYSIS                                  ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 """
         return report
 
     # ------------------------------------------------------------------ #
-    #  Gráficos
+    #  Plots
     # ------------------------------------------------------------------ #
     def plot_comparison(self):
-        """Genera gráficos de comparación entre modelos."""
+        """Generates comparison plots between models."""
         fig, axes = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle("Análisis Comparativo de Modelos RL", fontsize=18, fontweight="bold")
+        fig.suptitle("Comparative Analysis of RL Models", fontsize=18, fontweight="bold")
 
         model_names = list(self.all_results.keys())
         rewards_means = [self.all_results[m]["statistics"]["mean_reward"] for m in model_names]
@@ -218,7 +219,7 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         x_pos = np.arange(len(model_names))
         colors = ["#FF6B6B", "#4ECDC4", "#45B7D1", "#FFA07A"][: len(model_names)]
 
-        # Plot 1: Recompensa media
+        # Plot 1: Mean Reward
         axes[0, 0].bar(
             x_pos,
             rewards_means,
@@ -229,16 +230,16 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
             edgecolor="black",
             linewidth=2,
         )
-        axes[0, 0].axhline(y=900, color="g", linestyle="--", linewidth=2, label="Objetivo (900)")
+        axes[0, 0].axhline(y=900, color="g", linestyle="--", linewidth=2, label="Target (900)")
         axes[0, 0].axhline(
             y=np.mean(rewards_means),
             color="r",
             linestyle=":",
             linewidth=2,
-            label="Promedio",
+            label="Average",
         )
-        axes[0, 0].set_ylabel("Recompensa", fontsize=12, fontweight="bold")
-        axes[0, 0].set_title("Recompensa Media por Modelo", fontsize=13, fontweight="bold")
+        axes[0, 0].set_ylabel("Reward", fontsize=12, fontweight="bold")
+        axes[0, 0].set_title("Mean Reward by Model", fontsize=13, fontweight="bold")
         axes[0, 0].set_xticks(x_pos)
         axes[0, 0].set_xticklabels(
             [name.replace("ppo_car_racing_step_", "") for name in model_names],
@@ -248,13 +249,13 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         axes[0, 0].legend()
         axes[0, 0].grid(alpha=0.3, axis="y")
 
-        # Plot 2: Tasa de victoria
+        # Plot 2: Win Rate
         bars = axes[0, 1].bar(
             x_pos, win_rates, color=colors, alpha=0.8, edgecolor="black", linewidth=2
         )
         axes[0, 1].axhline(y=100, color="g", linestyle="--", linewidth=2, alpha=0.5)
-        axes[0, 1].set_ylabel("Porcentaje (%)", fontsize=12, fontweight="bold")
-        axes[0, 1].set_title("Tasa de Victoria (Recompensa > 900)", fontsize=13, fontweight="bold")
+        axes[0, 1].set_ylabel("Percentage (%)", fontsize=12, fontweight="bold")
+        axes[0, 1].set_title("Win Rate (Reward > 900)", fontsize=13, fontweight="bold")
         axes[0, 1].set_xticks(x_pos)
         axes[0, 1].set_xticklabels(
             [name.replace("ppo_car_racing_step_", "") for name in model_names],
@@ -275,13 +276,13 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
                 fontweight="bold",
             )
 
-        # Plot 3: Éxito vs Victoria
+        # Plot 3: Success vs Win
         width = 0.35
         axes[1, 0].bar(
             x_pos - width / 2,
             success_rates,
             width,
-            label="Éxito (>0)",
+            label="Success (>0)",
             color="skyblue",
             alpha=0.8,
             edgecolor="black",
@@ -290,13 +291,13 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
             x_pos + width / 2,
             win_rates,
             width,
-            label="Victoria (>900)",
+            label="Win (>900)",
             color="orange",
             alpha=0.8,
             edgecolor="black",
         )
-        axes[1, 0].set_ylabel("Porcentaje (%)", fontsize=12, fontweight="bold")
-        axes[1, 0].set_title("Comparativa: Éxito vs Victoria", fontsize=13, fontweight="bold")
+        axes[1, 0].set_ylabel("Percentage (%)", fontsize=12, fontweight="bold")
+        axes[1, 0].set_title("Success vs Win Rate", fontsize=13, fontweight="bold")
         axes[1, 0].set_xticks(x_pos)
         axes[1, 0].set_xticklabels(
             [name.replace("ppo_car_racing_step_", "") for name in model_names],
@@ -307,7 +308,7 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         axes[1, 0].set_ylim([0, 110])
         axes[1, 0].grid(alpha=0.3, axis="y")
 
-        # Plot 4: Mejora relativa
+        # Plot 4: Relative Improvement
         if len(model_names) > 1:
             rewards_array = np.array(rewards_means)
             improvements = (rewards_array - rewards_array[0]) / (abs(rewards_array[0]) + 1e-6) * 100
@@ -323,10 +324,10 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
             )
             axes[1, 1].axhline(y=0, color="red", linestyle="--", linewidth=1, alpha=0.5)
             axes[1, 1].fill_between(range(len(model_names)), improvements, alpha=0.3)
-            axes[1, 1].set_ylabel("Mejora (%)", fontsize=12, fontweight="bold")
-            axes[1, 1].set_xlabel("Progresión del Entrenamiento", fontsize=12, fontweight="bold")
+            axes[1, 1].set_ylabel("Improvement (%)", fontsize=12, fontweight="bold")
+            axes[1, 1].set_xlabel("Training Progression", fontsize=12, fontweight="bold")
             axes[1, 1].set_title(
-                "Mejora Relativa a lo Largo del Entrenamiento", fontsize=13, fontweight="bold"
+                "Relative Improvement over Training", fontsize=13, fontweight="bold"
             )
             axes[1, 1].set_xticks(range(len(model_names)))
             axes[1, 1].set_xticklabels(
@@ -342,17 +343,17 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         plt.tight_layout()
         plot_file = self.comparison_dir / "model_comparison.png"
         plt.savefig(plot_file, dpi=300, bbox_inches="tight")
-        print(f"📊 Gráficos comparativos guardados en: {plot_file}")
+        print(f"📊 Comparison plots saved to: {plot_file}")
         plt.close()
 
     # ------------------------------------------------------------------ #
-    #  Distribuciones
+    #  Distributions
     # ------------------------------------------------------------------ #
     def plot_distributions(self):
-        """Genera gráficos de distribución de recompensas."""
+        """Generates reward distribution plots."""
         fig, axes = plt.subplots(1, len(self.all_results), figsize=(16, 5))
         fig.suptitle(
-            "Distribuciones de Recompensa por Modelo",
+            "Reward Distributions by Model",
             fontsize=16,
             fontweight="bold",
         )
@@ -372,14 +373,14 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
                 color="red",
                 linestyle="--",
                 linewidth=2,
-                label=f"Media: {stats['mean_reward']:.1f}",
+                label=f"Mean: {stats['mean_reward']:.1f}",
             )
             axes[idx].axvline(
                 x=stats["median_reward"],
                 color="green",
                 linestyle="--",
                 linewidth=2,
-                label=f"Mediana: {stats['median_reward']:.1f}",
+                label=f"Median: {stats['median_reward']:.1f}",
             )
             axes[idx].axvline(
                 x=900,
@@ -387,11 +388,11 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
                 linestyle="--",
                 linewidth=2,
                 alpha=0.7,
-                label="Objetivo: 900",
+                label="Target: 900",
             )
 
-            axes[idx].set_xlabel("Recompensa Total")
-            axes[idx].set_ylabel("Frecuencia")
+            axes[idx].set_xlabel("Total Reward")
+            axes[idx].set_ylabel("Frequency")
             short_name = model_name.replace("ppo_car_racing_step_", "")
             axes[idx].set_title(short_name, fontweight="bold")
             axes[idx].legend(fontsize=9)
@@ -400,24 +401,24 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         plt.tight_layout()
         plot_file = self.comparison_dir / "reward_distributions.png"
         plt.savefig(plot_file, dpi=300, bbox_inches="tight")
-        print(f"📊 Distribuciones guardadas en: {plot_file}")
+        print(f"📊 Distributions saved to: {plot_file}")
         plt.close()
 
     # ------------------------------------------------------------------ #
-    #  CSV y pipeline completo
+    #  CSV and Full Run
     # ------------------------------------------------------------------ #
     def save_comparison_csv(self):
-        """Exporta la comparación como CSV."""
+        """Exports comparison to CSV."""
         df = self.create_comparison_dataframe()
         csv_file = self.comparison_dir / "model_comparison.csv"
         df.to_csv(csv_file, index=False)
-        print(f"📄 Comparación exportada a CSV: {csv_file}")
+        print(f"📄 Comparison exported to CSV: {csv_file}")
         return csv_file
 
     def run_full_comparison(self, model_names):
-        """Ejecuta el análisis comparativo completo."""
+        """Runs the full comparative analysis."""
         print("\n" + "=" * 80)
-        print("ANÁLISIS COMPARATIVO DE MODELOS RL")
+        print("RL MODEL COMPARATIVE ANALYSIS")
         print("=" * 80)
 
         self.load_all_models(model_names)
@@ -426,22 +427,22 @@ Mejora en Victoria:    {last['win_rate'] - first['win_rate']:>10.1f}%
         report_file = self.comparison_dir / "comparison_report.txt"
         with open(report_file, "w", encoding="utf-8") as f:
             f.write(report)
-        print(f"📄 Reporte guardado en: {report_file}")
+        print(f"📄 Report saved to: {report_file}")
 
-        print("\n📊 Generando gráficos...")
+        print("\n📊 Generating plots...")
         self.plot_comparison()
         self.plot_distributions()
         self.save_comparison_csv()
 
         print("\n" + "=" * 80)
-        print("✅ ANÁLISIS COMPARATIVO COMPLETADO")
+        print("✅ COMPARATIVE ANALYSIS COMPLETED")
         print("=" * 80 + "\n")
 
         return report
 
 
 if __name__ == "__main__":
-    # Nombres de los modelos tal como están en evaluation_results/
+    # Model names as they appear in evaluation_results/
     model_names = [
         "ppo_car_racing_step_500000",
         "ppo_car_racing_step_1000000",
