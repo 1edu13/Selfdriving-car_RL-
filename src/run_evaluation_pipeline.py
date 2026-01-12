@@ -39,7 +39,7 @@ def main():
     
     # ========== PARÁMETROS DE EVALUACIÓN ==========
     num_episodes = 30  # Episodios por modelo
-    seed = 100         # Seed para reproducibilidad
+    seed = 100         # Seed para reproducibilida
     
     # ========== FASE 1: EVALUAR CADA MODELO ==========
     
