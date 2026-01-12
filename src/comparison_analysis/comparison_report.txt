@@ -1,126 +1,109 @@
 
 ╔════════════════════════════════════════════════════════════════════════════╗
-║              ANÁLISIS COMPARATIVO DE MODELOS - SELF-DRIVING CAR            ║
+║              COMPARATIVE ANALYSIS OF MODELS - SELF-DRIVING CAR             ║
 ╚════════════════════════════════════════════════════════════════════════════╝
 
-📊 RESUMEN EJECUTIVO
+📊 EXECUTIVE SUMMARY
 ────────────────────────────────────────────────────────────────────────────────
-Modelos Evaluados: 3
-Fecha de Análisis: 2026-01-12 10:39:46
+
+Evaluated Models:  3
+Analysis Date:     2026-01-12 18:13:49
 
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ TABLA COMPARATIVA DE RENDIMIENTO                                          │
+│ PERFORMANCE COMPARISON TABLE                                               │
 └────────────────────────────────────────────────────────────────────────────┘
 
-                     Modelo  Recompensa Media  Std Dev    Min    Max  Tasa Victoria (%)  Tasa Éxito (%)  Pasos Promedio  Episodios
- ppo_car_racing_step_500000            252.22   171.69   4.69 721.92               0.00           100.0          1000.0         30
-ppo_car_racing_step_1000000            603.82   192.07 176.36 884.47               0.00           100.0          1000.0         30
-ppo_car_racing_step_2000000            785.49   152.59 370.38 938.00              16.67           100.0           977.0         30
+                      Model  Mean Reward  Std Dev  Win Rate (%)  Avg Steps  Episodes
+ ppo_car_racing_step_500000       252.22   171.69          0.00     1000.0        30
+ppo_car_racing_step_1000000       603.82   192.07          0.00     1000.0        30
+ppo_car_racing_step_2000000       785.49   152.59         16.67      977.0        30
 
 ╔════════════════════════════════════════════════════════════════════════════╗
-║                          ANÁLISIS DETALLADO                               ║
+║                          DETAILED ANALYSIS                                ║
 ╚════════════════════════════════════════════════════════════════════════════╝
+
 
 📌 PPO_CAR_RACING_STEP_500000
 ────────────────────────────────────────────────────────────────────────────────
-Episodios Evaluados:    30
+Evaluated Episodes:     30
 Device:                 cuda
 Seed:                   100
 
-RENDIMIENTO:
-  • Recompensa Media:     252.22 ± 171.69
-  • Rango:              [    4.7,   721.9]
-  • Mediana:              273.90
-  • Tasa Victoria:           0.0% (recompensa > 900)
-  • Tasa Éxito:            100.0% (recompensa > 0)
+PERFORMANCE:
+  • Mean Reward:          252.22 ± 171.69
+  • Range:              [    4.7,   721.9]
+  • Median:               273.90
+  • Win Rate:                0.0% (reward > 900)
+  • Success Rate:          100.0% (reward > 0)
 
-DURACIÓN:
-  • Pasos Promedio:       1000.0 ±    0.0
+DURATION:
+  • Avg Steps:            1000.0 ±    0.0
 
 CONTROL:
-  • Dirección (mean):     0.3388
-  • Acelerador (mean):    0.2187
-  • Freno (mean):        -0.0939
+  • Steering (mean):      0.3388
+  • Throttle (mean):      0.2187
+  • Brake (mean):        -0.0939
+
 
 📌 PPO_CAR_RACING_STEP_1000000
 ────────────────────────────────────────────────────────────────────────────────
-Episodios Evaluados:    30
+Evaluated Episodes:     30
 Device:                 cuda
 Seed:                   100
 
-RENDIMIENTO:
-  • Recompensa Media:     603.82 ± 192.07
-  • Rango:              [  176.4,   884.5]
-  • Mediana:              608.59
-  • Tasa Victoria:           0.0% (recompensa > 900)
-  • Tasa Éxito:            100.0% (recompensa > 0)
+PERFORMANCE:
+  • Mean Reward:          603.82 ± 192.07
+  • Range:              [  176.4,   884.5]
+  • Median:               608.59
+  • Win Rate:                0.0% (reward > 900)
+  • Success Rate:          100.0% (reward > 0)
 
-DURACIÓN:
-  • Pasos Promedio:       1000.0 ±    0.0
+DURATION:
+  • Avg Steps:            1000.0 ±    0.0
 
 CONTROL:
-  • Dirección (mean):     0.0830
-  • Acelerador (mean):    0.4961
-  • Freno (mean):        -0.6529
+  • Steering (mean):      0.0830
+  • Throttle (mean):      0.4961
+  • Brake (mean):        -0.6529
+
 
 📌 PPO_CAR_RACING_STEP_2000000
 ────────────────────────────────────────────────────────────────────────────────
-Episodios Evaluados:    30
+Evaluated Episodes:     30
 Device:                 cuda
 Seed:                   100
 
-RENDIMIENTO:
-  • Recompensa Media:     785.49 ± 152.59
-  • Rango:              [  370.4,   938.0]
-  • Mediana:              865.14
-  • Tasa Victoria:          16.7% (recompensa > 900)
-  • Tasa Éxito:            100.0% (recompensa > 0)
+PERFORMANCE:
+  • Mean Reward:          785.49 ± 152.59
+  • Range:              [  370.4,   938.0]
+  • Median:               865.14
+  • Win Rate:               16.7% (reward > 900)
+  • Success Rate:          100.0% (reward > 0)
 
-DURACIÓN:
-  • Pasos Promedio:        977.0 ±   75.3
+DURATION:
+  • Avg Steps:             977.0 ±   75.3
 
 CONTROL:
-  • Dirección (mean):     0.0612
-  • Acelerador (mean):    0.3442
-  • Freno (mean):        -0.8967
+  • Steering (mean):      0.0612
+  • Throttle (mean):      0.3442
+  • Brake (mean):        -0.8967
+
 
 ════════════════════════════════════════════════════════════════════════════════
-🚀 ANÁLISIS DE MEJORA (Primero vs Último)
+🚀 IMPROVEMENT ANALYSIS (First vs Last)
 ────────────────────────────────────────────────────────────────────────────────
 
-Modelo Base:           ppo_car_racing_step_500000
-Modelo Final:          ppo_car_racing_step_2000000
+Base Model:            ppo_car_racing_step_500000
+Final Model:           ppo_car_racing_step_2000000
 
-Recompensa Base:           252.22
-Recompensa Final:          785.49
-Mejora Absoluta:           533.28
-Mejora Relativa:            211.4%
+Base Reward:               252.22
+Final Reward:              785.49
+Absolute Improvement:      533.28
+Relative Improvement:       211.4%
 
-Victoria Base:                0.0%
-Victoria Final:              16.7%
-Mejora en Victoria:          16.7%
+Base Win Rate:                0.0%
+Final Win Rate:              16.7%
+Win Rate Improvement:        16.7%
 
 ════════════════════════════════════════════════════════════════════════════════
 
-💡 CONCLUSIONES Y RECOMENDACIONES
-{'─' * 80}
-
-1. RENDIMIENTO GENERAL:
-   - Identificar el modelo con mayor recompensa media estable.
-   - Los modelos entrenados más tiempo tienden a ser más estables.
-
-2. ESTABILIDAD (Desviación Estándar):
-   - Menor desviación = comportamiento más predecible.
-
-3. TASA DE VICTORIA:
-   - Objetivo: recompensa > 900.
-
-4. DURACIÓN DE EPISODIOS:
-   - Mayor duración indica que el agente se mantiene en pista.
-
-5. PATRONES DE CONTROL:
-   - Valores extremos de steering/brake pueden indicar conducción nerviosa.
-
-╔════════════════════════════════════════════════════════════════════════════╗
-║                          FIN DEL ANÁLISIS                                 ║
-╚════════════════════════════════════════════════════════════════════════════╝
