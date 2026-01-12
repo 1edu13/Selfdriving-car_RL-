@@ -13,7 +13,7 @@ def train():
     run_name = "ppo_carracing_v1"
     env_id = "CarRacing-v2"
     seed = 42
-    total_timesteps = 2000000  # For achive a good trained agent, we recommend at least 1M steps
+    total_timesteps = 3000000  # For achive a good trained agent, we recommend at least 1M steps
     learning_rate = 3e-4
     num_envs = 8               # Parallel environments for faster data collection
     num_steps = 1024           # Steps per environment per update (The 'Buffer' size)
@@ -32,7 +32,6 @@ def train():
 
     # --- Setup ---
     device = get_device()
-    print(f"Training on device: {device}")
 
     # Create directories for saving models_T3
     os.makedirs("../Models/models_T3", exist_ok=True)
@@ -45,6 +44,17 @@ def train():
 
     # Initialize Agent
     agent = Agent(envs).to(device)
+
+    #To train from a chekpoint
+    checkpoint_path = "../Models/models_T3/ppo_car_racing_step_2000000.pth"
+    if os.path.exists(checkpoint_path):
+        checkpoint = torch.load(checkpoint_path, map_location=device)
+        agent.load_state_dict(checkpoint)
+        print(f"✅ Checkpoint load from: {checkpoint_path}")
+        print(f"📈 Starting from ~2M steps to {total_timesteps:,} steps")
+    else:
+        print("⚠️  No se encontró checkpoint, entrenamiento desde cero")
+
     #Uses Adam optimizer to update the network weights in order to minimize the loss function.
     # It is an evolution of SGD with momentum and adaptive learning rates.
     # New Weight = Old Weight - Global LR * Adaptive Adjustment
@@ -191,7 +201,7 @@ def train():
             print(f"Model saved at step {global_step}")
 
     # Save final model
-    torch.save(agent.state_dict(), "../Models/models_T3/ppo_car_racing_final.pth")
+    torch.save(agent.state_dict(), "../Models/models_T3/ppo_car_racing_step_3000000.pth")
     envs.close()
     print("Training Completed.")
 
