@@ -4,7 +4,7 @@ import gymnasium as gym
 import os
 
 from agent import Agent
-from utils import make_env, get_device
+from utils2 import make_env, get_device
 
 def evaluate(model_path, episodes=5):
     """
@@ -74,5 +74,5 @@ if __name__ == "__main__":
 
     # Escribe aquí la ruta exacta de tu modelo entre comillas:
     # modelo_a_probar = r"C:\Users\emped\OneDrive\Documentos\MIS COSAS\Yo\3 CURSO\Selfdriving-car_RL-\Models\models_T3\ppo_car_racing_step_1064960.pth"
-    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\ppo_car_racing_final_3M.pth"
+    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5_grass\model_0500k.pth"
     evaluate(modelo_a_probar)

@@ -11,7 +11,7 @@ from utils2 import make_env, get_device
 
 def train():
     # --- Hyperparameters ---
-    run_name = "ppo_carracing_T4_grass_penalty"  # Nombre para identificar esta run
+    run_name = "ppo_carracing_T5_grass_penalty"  # Nombre para identificar esta run
     env_id = "CarRacing-v2"
     seed = 42
     total_timesteps = 3000000
@@ -35,11 +35,11 @@ def train():
     device = get_device()
 
     # Crear directorios para guardar los nuevos modelos T4
-    os.makedirs("../Models/models_T4_grass", exist_ok=True)
+    os.makedirs("../Models/models_T5_grass", exist_ok=True)
 
     # Nota: La carpeta de videos se crea automáticamente por el wrapper,
     # pero nos aseguramos de que exista la base.
-    os.makedirs("videos_T4", exist_ok=True)
+    os.makedirs("videos_T5", exist_ok=True)
 
     # Vectorized Environment
     # AQUI ESTA LA CLAVE: apply_grass_penalty=True
@@ -165,7 +165,7 @@ def train():
             print(f"Model saved at step {global_step} -> {save_path}")
 
     # Save final model
-    torch.save(agent.state_dict(), "../Models/models_T5_grass/model_final.pth")
+    torch.save(agent.state_dict(), "../Models/models_T5_grass/model_3000k.pth")
     envs.close()
     print("Training Completed.")
 

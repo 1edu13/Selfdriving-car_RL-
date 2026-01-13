@@ -27,29 +27,32 @@ def main():
     # Sugerencia: Usa nombres de clave que indiquen los pasos para ordenamiento automático
     models_to_evaluate = {
         # Fase Inicial (Aprendizaje básico)
-        'model_0200k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_0200k.pth',
+        'model_0200k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_0200k.pth',
 
         # Primer Progreso (El coche ya no gira en círculos)
-        'model_0500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_0500k.pth',  # Tu archivo anterior
+        'model_0500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_0500k.pth',  # Tu archivo anterior
 
         # Punto Medio (Mejora rápida)
-        'model_1000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_1000k.pth',  # Tu archivo anterior
+        'model_1000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_1000k.pth',  # Tu archivo anterior
+
+        # Punto Medio+ (Mejora rápida)
+        'model_1250k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_1250k.pth',
 
         # Transición (Convergencia)
-        'model_1500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_1500k.pth',  # Aprox
+        'model_1500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_1500k.pth',  # Aprox
 
         # Pre-Saturación (Tu modelo "final" anterior, que era 2M)
-        'model_2000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_2000k.pth',
+        'model_2000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_2000k.pth',
 
         # Confirmación Rodilla
-        'model_2500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_2500k.pth',
+        'model_2500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_2500k.pth',
 
         # Final Real (Saturación)
-        'model_3000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_3000k.pth',
+        'model_3000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5\model_3000k.pth',
     }
 
     num_episodes = 30  # Episodios por modelo
-    seed = 42  # Misma seed para todos
+    seed = 100  # Misma seed para todos
 
     # ========== PHASE 1: INDIVIDUAL EVALUATION ==========
     print_banner("PHASE 1: Individual Model Evaluation")

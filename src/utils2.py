@@ -63,7 +63,7 @@ def make_env(env_id, seed, idx, capture_video, run_name, apply_grass_penalty=Fal
         # Wrapper para grabar video (solo en el entorno 0)
         if capture_video and idx == 0:
             # Guarda en la carpeta videos_T4
-            env = gym.wrappers.RecordVideo(env, f"videos_T4/{run_name}")
+            env = gym.wrappers.RecordVideo(env, f"videos_T5/{run_name}")
 
         # --- APLICAR WRAPPER DE HIERBA AQUÍ ---
         # Debe ir ANTES de GrayScaleObservation para tener acceso a los colores
