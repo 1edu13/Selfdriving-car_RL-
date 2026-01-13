@@ -11,7 +11,7 @@ from utils2 import make_env, get_device
 
 def train():
     # --- Hyperparameters ---
-    run_name = "ppo_carracing_T5_grass_penalty"  # Nombre para identificar esta run
+    run_name = "ppo_carracing_T5_grass_penalty"  # Nombre para identificar esta runn
     env_id = "CarRacing-v2"
     seed = 42
     total_timesteps = 3000000
