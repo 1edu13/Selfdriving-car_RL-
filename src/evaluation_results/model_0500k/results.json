@@ -1,0 +1,143 @@
+{
+  "model": "model_0500k",
+  "evaluation_date": "2026-01-13T16:33:00.072163",
+  "num_episodes": 10,
+  "seed": 100,
+  "device": "cuda",
+  "statistics": {
+    "mean_reward": 346.299368378577,
+    "std_reward": 180.86622562485397,
+    "min_reward": 85.7142857142909,
+    "max_reward": 659.8566308243634,
+    "median_reward": 357.3770491803109,
+    "mean_length": 1000.0,
+    "std_length": 0.0,
+    "win_rate": 0.0,
+    "success_rate": 100.0,
+    "steering_mean": 0.16521962826373054,
+    "throttle_mean": 0.2448570743203163,
+    "brake_mean": -0.9210466578602791
+  },
+  "episodes": [
+    {
+      "episode_num": 0,
+      "total_reward": 362.96296296296356,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.36296296296296354,
+      "max_reward_step": 7.307407407407408,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": -0.12728972733020782,
+      "steering_std": 0.8019391894340515,
+      "throttle_mean": 0.3979162573814392,
+      "brake_mean": -0.9478024840354919
+    },
+    {
+      "episode_num": 1,
+      "total_reward": 177.22772277228205,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.17722772277228205,
+      "max_reward_step": 9.80099009900988,
+      "min_reward_step": -0.10000000000000142,
+      "steering_mean": -0.020857257768511772,
+      "steering_std": 0.7319775819778442,
+      "throttle_mean": 0.3591204583644867,
+      "brake_mean": -1.0758891105651855
+    },
+    {
+      "episode_num": 2,
+      "total_reward": 659.8566308243634,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.6598566308243634,
+      "max_reward_step": 7.068458781362008,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": -0.03888270631432533,
+      "steering_std": 0.9134793877601624,
+      "throttle_mean": 0.42316344380378723,
+      "brake_mean": -1.0762797594070435
+    },
+    {
+      "episode_num": 3,
+      "total_reward": 489.92805755393846,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.4899280575539385,
+      "max_reward_step": 7.094244604316547,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": 0.04713911563158035,
+      "steering_std": 0.9300432205200195,
+      "throttle_mean": 0.19797518849372864,
+      "brake_mean": -1.1976181268692017
+    },
+    {
+      "episode_num": 4,
+      "total_reward": 94.63087248322658,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.09463087248322659,
+      "max_reward_step": 6.611409395973155,
+      "min_reward_step": -0.10000000000000142,
+      "steering_mean": -0.0011821327498182654,
+      "steering_std": 0.977117121219635,
+      "throttle_mean": 0.4528575837612152,
+      "brake_mean": -1.0031037330627441
+    },
+    {
+      "episode_num": 5,
+      "total_reward": 85.7142857142909,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.08571428571429089,
+      "max_reward_step": 7.042857142857173,
+      "min_reward_step": -0.10000000000000142,
+      "steering_mean": 0.5488669276237488,
+      "steering_std": 1.172438621520996,
+      "throttle_mean": 0.14140458405017853,
+      "brake_mean": -0.39313989877700806
+    },
+    {
+      "episode_num": 6,
+      "total_reward": 359.0163934426054,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.35901639344260544,
+      "max_reward_step": 8.09672131147542,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": -0.0034342841245234013,
+      "steering_std": 0.7136507034301758,
+      "throttle_mean": 0.3520662784576416,
+      "brake_mean": -1.014286994934082
+    },
+    {
+      "episode_num": 7,
+      "total_reward": 562.7565982404548,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.5627565982404548,
+      "max_reward_step": 5.765102639296202,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": 0.06086761876940727,
+      "steering_std": 0.8396025896072388,
+      "throttle_mean": 0.2636145055294037,
+      "brake_mean": -1.2259830236434937
+    },
+    {
+      "episode_num": 8,
+      "total_reward": 315.1624548736287,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.3151624548736287,
+      "max_reward_step": 7.120216606498195,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": 1.1182888746261597,
+      "steering_std": 1.105775237083435,
+      "throttle_mean": -0.44687533378601074,
+      "brake_mean": -0.16262133419513702
+    },
+    {
+      "episode_num": 9,
+      "total_reward": 355.73770491801645,
+      "episode_length": 1000,
+      "avg_reward_per_step": 0.35573770491801643,
+      "max_reward_step": 6.457377049180328,
+      "min_reward_step": -0.10000000000002274,
+      "steering_mean": 0.06867985427379608,
+      "steering_std": 0.9054854512214661,
+      "throttle_mean": 0.3073277771472931,
+      "brake_mean": -1.1137421131134033
+    }
+  ]
+}
