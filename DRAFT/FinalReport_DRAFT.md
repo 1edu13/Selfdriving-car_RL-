@@ -1,4 +1,12 @@
-<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });
+</script>
 <script type="text/x-mathjax-config">
     MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });
 </script>
@@ -23,23 +31,24 @@ Unlike rule-based systems, the agent learns purely from visual inputs (pixels) a
 ### 2.1 Reinforcement Learning Framework
 The problem is modeled as a Markov Decision Process (MDP) where an **Agent** interacts with an **Environment**:
 
-- **State \(s_t\):** The current view of the world (images of the track).
-- **Action \(a_t\):** The control inputs applied to the car (steering, gas, brake).
-- **Reward \(r_t\):** A scalar feedback signal indicating the immediate success of the action.
+- **State ($s_{t}$):** The current view of the world (images of the track).
+- **Action ($a_{t}$):** The control inputs applied to the car (steering, gas, brake).
+- **Reward ($r_{t}$):** A scalar feedback signal indicating the immediate success of the action.
 
 ### 2.2 Proximal Policy Optimization (PPO)
 We utilize PPO, an **on-policy** gradient method that strikes a balance between ease of tuning, sample complexity, and performance.
 
 - **Actor-Critic Architecture:** The model consists of two networks (or two heads sharing a backbone):
-  - **Actor:** Outputs the probability distribution of actions given a state (policy \(\pi_\theta\)).
-  - **Critic:** Estimates the value of a state \(V(s)\) to guide training stability.
-- **The Clipped Surrogate Objective:** PPO prevents drastic updates to the policy that could destabilize training. It limits the change in the policy ratio \(r_t(\theta)\) using a clipping mechanism:
+  - **Actor:** Outputs the probability distribution of actions given a state (Policy $\pi_\theta$).
+  - **Critic:** Estimates the value of a state ($V(s)$) to guide the training stability.
+- **The Clipped Surrogate Objective:** PPO prevents drastic updates to the policy that could destabilize training. It limits the change in the policy ratio $r_{t}(\theta)$ using a clipping mechanism:
 
-\[
-L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[\min\left(r_t(\theta)\hat{A}_t,\; \text{clip}\big(r_t(\theta), 1-\epsilon, 1+\epsilon\big)\hat{A}_t\right)\right]
-\]
 
-where \(\hat{A}_t\) is the advantage estimate and \(\epsilon\) is a hyperparameter (typically 0.2).
+$$
+L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min \left( r_t(\theta)\hat{A}_t, \ \text{clip}\left( r_t(\theta), 1-\epsilon, 1+\epsilon \right)\hat{A}_t \right) \right]
+$$
+
+Where $\hat{A}_{t}$ is the advantage estimate and $\epsilon$ is a hyperparameter (usually 0.2).
 
 ---
 
@@ -48,13 +57,20 @@ where \(\hat{A}_t\) is the advantage estimate and \(\epsilon\) is a hyperparamet
 This section defines the “Rules of the Game” and how the agent perceives and interacts with the world.
 
 ### 3.1 Environment Definition
-- **Environment ID:** `CarRacing-v3` (Gymnasium)
-- **Type:** Continuous control from pixels.
+* **Environment ID:** `CarRacing-v2` (Gymnasium).
+* **Type:** Continuous Control from visual inputs.
+* **Rendering:** The environment renders a top-down view of the car and track.
 
-### 3.2 Observation Space (States)
-The raw environment provides a \(96 \times 96 \times 3\) RGB image.  
-![Example of how the environment looks like](enviroment.png)  
-*Figure 1: Visual example of the `CarRacing-v3` (Gymnasium) environment.*
+### 3.2 Observation Space (State Representation)
+The raw environment provides a $96 \times 96 \times 3$ RGB image. To enable the agent to perceive motion and reduce computational complexity, we implemented a custom wrapper pipeline:
+
+1.  **Grayscale Conversion:** The 3-channel RGB image is converted to a single-channel grayscale image ($96 \times 96$). This focuses learning on shapes and road boundaries rather than colors, reducing the input dimensionality by a factor of 3.
+2.  **Frame Stacking (Temporal Context):** We stack the **4 most recent frames** into a single observation. This transforms the input shape to $(4, 96, 96)$.
+    * *Rationale:* A single static image contains no information about velocity or acceleration. By stacking frames, the Convolutional Neural Network (CNN) can infer the car's speed and turning direction from the differences between channels.
+3.  **Normalization:** Input pixel values (integers $0-255$) are scaled to the floating-point range $[0.0, 1.0]$ immediately before being processed by the neural network. This stabilizes training gradients.
+
+**Final State Shape:** Tensor of shape `(Batch_Size, 4, 96, 96)`.![Example of how the environment looks like](enviroment.png)  
+*Figure 1: Visual example of the `CarRacing-v2` (Gymnasium) environment.*
 
 To reduce computational load and provide temporal context (speed/direction), the following preprocessing pipeline is applied:
 
@@ -64,38 +80,64 @@ To reduce computational load and provide temporal context (speed/direction), the
 
 **Final state shape:** tensor of shape \((4, 96, 96)\) (Channels, Height, Width).
 
-### 3.3 Action Space (Actions)
-The agent operates in a continuous action space. At every time step, the network outputs a vector of 3 floating-point values:
+### 3.3 Action Space (Action Representation)
+Unlike discrete environments (e.g., "Press Left" or "Press Right"), driving requires smooth, continuous adjustments. The agent operates in a continuous action space controlling three actuators. The Policy Network outputs a **Gaussian distribution** (mean and learnable standard deviation) for each action, from which values are sampled.
 
-| Component    | Range        | Description                               |
-| :----------- | :----------- | :---------------------------------------- |
-| **Steering** | \([-1.0, 1.0]\) | -1.0 full left, 1.0 full right           |
-| **Gas**      | \([0.0, 1.0]\) | Acceleration intensity                   |
-| **Brake**    | \([0.0, 1.0]\) | Braking intensity                        |
+To enable exploration, the Actor network does not output a fixed action. Instead, for each action component, it outputs the parameters of a **Gaussian Distribution**: a **Mean ($\mu$)** and a learnable **Log-Standard Deviation ($\log\sigma$)**.
 
-### 3.4 Reward System
-The reward function drives the learning process:
+The action $a_t$ sent to the environment is sampled as:
+$$
+a_t \sim \mathcal{N}(\mu(s_t), \sigma(s_t))
+$$
+*During evaluation, we bypass sampling and use the mean $\mu$ directly for deterministic behavior.*
 
-- **Progress reward:** \(+1000 / N\) for every unique track tile visited (where \(N\) is the total number of tiles). This incentivizes completing the lap.
-- **Time penalty:** \(-0.1\) per frame to encourage fast completion.
-- **Failure penalty:** \(-100\) if the car moves completely off-track, terminating the episode.
+| Component | Range | Description |
+| :--- | :--- | :--- |
+| **Steering** | $[-1.0, 1.0]$ | Controls the wheel angle. $-1.0$ is full Left, $1.0$ is full Right. |
+| **Gas** | $[0.0, 1.0]$ | Throttle/Acceleration intensity. |
+| **Brake** | $[0.0, 1.0]$ | Braking intensity. |
 
-**Success criterion:** the agent is considered successful if it consistently scores **> 900 points** over multiple evaluation episodes.
+### 3.4 Reward Function
+The reward function $R(s, a)$ is the core signal that guides learning. We use the standard dense reward structure of `CarRacing-v2`, which implicitly balances speed and safety.
 
+The total reward for an episode is calculated as:
+
+$$
+R_{episode} = \sum_{t=0}^{T} \left( \underbrace{r_{tile}}_{\text{Progress}} + \underbrace{r_{time}}_{\text{Speed Incentive}} \right) + \underbrace{r_{penalty}}_{\text{Safety}}
+$$
+
+Where:
+* **Progress Reward ($r_{tile}$):** The track is composed of $N$ tiles. Visiting a new tile yields $+1000/N$ points. Visiting all tiles results in $+1000$ points.
+* **Time Penalty ($r_{time}$):** A constant penalty of $-0.1$ is applied at every time step. This forces the agent to drive fast; if it drives too slowly, the accumulated negative time penalty will outweigh the progress reward.
+* **Safety Penalty ($r_{penalty}$):** If the car moves completely off the field of play (all wheels on grass), the episode terminates immediately with a penalty of $-100$.
+
+**Success Criterion:** The agent is considered to have "solved" the environment if it consistently achieves a score **> 900 points**, implying it completed the track reasonably fast with minimal errors.
 ---
 
 ## 4. Methods and Implementation Strategy
 
 ### 4.1 Neural Network Architecture
-To process the visual input, a Convolutional Neural Network (CNN) backbone is used:
+The architecture follows a standard **Actor-Critic** design sharing a common convolutional backbone, implemented in PyTorch.
 
-- **Input:** \((4, 96, 96)\)
-- **Feature extractor:** 3 convolutional layers with ReLU activations to extract spatial features (curves, borders, car position).
-- **Heads:**
-  - **Policy head (Actor):** fully connected layers outputting the mean \(\mu\) and a learnable log standard deviation \(\log\sigma\) for a Gaussian distribution over actions.
-  - **Value head (Critic):** fully connected layers outputting a scalar value estimate \(V(s)\).
+1.  **Visual Encoder (Backbone):**
+    * **Input:** $(4, 96, 96)$ (4 stacked grayscale frames).
+    * **Conv1:** 32 filters, $8 \times 8$ kernel, stride 4. (Reduces spatial dimension efficiently).
+    * **Conv2:** 64 filters, $4 \times 4$ kernel, stride 2.
+    * **Conv3:** 64 filters, $3 \times 3$ kernel, stride 1.
+    * **Flatten:** Converts the 3D feature maps into a 1D vector of 1024 features.
+    * *Activation:* ReLU is used after each convolutional layer to introduce non-linearity.
 
-### 4.2 Technologies Used
+2.  **Heads:**
+    * **Actor (Policy):** Two fully connected layers (512 units $\to$ Action Dim). It outputs the **Mean ($\mu$)** of the action distribution. The **Standard Deviation ($\sigma$)** is learned as a separate independent parameter (`actor_logstd`), allowing the agent to adapt its exploration noise during training.
+    * **Critic (Value):** Two fully connected layers (512 units $\to$ 1 unit) estimating the state value $V(s)$.
+
+
+
+[Todo: Hablar del sistema de penalización implementado]: #
+
+
+
+### 4.3 Technologies Used
 - **Python 3.10+**
 - **PyTorch:** neural network definition and gradient-based optimization.
 - **NumPy:** numerical utilities and buffer manipulation.
@@ -107,8 +149,8 @@ The following diagram illustrates the iterative learning process implemented in 
 ![PPO Training Loop Diagram](ppo_diagram.png)  
 *Figure 2: Visual representation of the PPO training cycle, showing the data collection phase (filling the buffer) and the backpropagation phase (updating Actor and Critic).*
 
-1. **Rollout:** collect \(T\) time steps of data using the current policy (states, actions, rewards, dones, values), filling a trajectory buffer.
-2. **Advantage estimation:** compute Generalized Advantage Estimation (GAE) to obtain low-variance, bias-controlled estimates \(\hat{A}_t\).
+1. **Rollout:** collect $T$ time steps of data using the current policy (states, actions, rewards, dones, values), filling a trajectory buffer.
+2. **Advantage estimation:** compute Generalized Advantage Estimation (GAE) to obtain low-variance, bias-controlled estimates $\hat{A}_{t}$.
 3. **Optimization:** update the network weights using the PPO clipped objective, combining policy loss, value loss and an entropy bonus.
 4. **Repeat:** iterate the rollout–optimization cycle until the mean episode score converges.
 
