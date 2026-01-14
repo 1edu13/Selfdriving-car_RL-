@@ -33,6 +33,7 @@ class ComparativeAnalysis:
             "#FF6B6B",  # 200k (Soft Red)
             "#FFA07A",  # 500k (Orange)
             "#FFD700",  # 1M (Gold)
+            "#D4E157",  # 1250k (Lime Green) - NUEVO
             "#90EE90",  # 1.5M (Light Green)
             "#4ECDC4",  # 2M (Teal)
             "#45B7D1",  # 2.5M (Sky Blue)

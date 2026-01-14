@@ -92,7 +92,7 @@ def make_env(env_id, seed, idx, capture_video, run_name, apply_grass_penalty=Fal
         env = gym.make(env_id, render_mode="rgb_array")
 
         if capture_video and idx == 0:
-            env = gym.wrappers.RecordVideo(env, f"videos_T4/{run_name}")
+            env = gym.wrappers.RecordVideo(env, f"videos_T6/{run_name}")
 
         # --- APLICAR WRAPPER ---
         if apply_grass_penalty:
