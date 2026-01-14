@@ -35,11 +35,11 @@ def train():
     device = get_device()
 
     # Crear directorios para guardar los nuevos modelos T4
-    os.makedirs("../Models/models_T5_grass", exist_ok=True)
+    os.makedirs("../Models/models_T6_grass", exist_ok=True)
 
     # Nota: La carpeta de videos se crea automáticamente por el wrapper,
     # pero nos aseguramos de que exista la base.
-    os.makedirs("videos_T5", exist_ok=True)
+    os.makedirs("videos_T6", exist_ok=True)
 
     # Vectorized Environment
     # AQUI ESTA LA CLAVE: apply_grass_penalty=True
