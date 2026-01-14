@@ -573,10 +573,14 @@ if __name__ == "__main__":
 
     # Model names as they appear in the directories
     model_names = [
-        "ppo_car_racing_step_500000",  # 500K steps
-        "ppo_car_racing_step_1000000",  # 1M steps
-        "ppo_car_racing_step_2000000",  # 2M steps
-        "ppo_car_racing_final_3M"
+        "model_0200k",  # 500K steps
+        "model_0500k",  # 1M steps
+        "model_1000k",  # 2M steps
+        "model_1250k",
+        "model_1500k",  # 500K steps
+        "model_2000k",  # 1M steps
+        "model_2500k",  # 2M steps
+        "model_3000k"
     ]
 
     # Run analysis
