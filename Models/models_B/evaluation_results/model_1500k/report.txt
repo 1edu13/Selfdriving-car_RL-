@@ -1,0 +1,47 @@
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  EVALUATION REPORT - RL MODEL                      ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📋 MODEL INFORMATION
+────────────────────────────────────────────────────────────────
+Model Name:            model_1500k
+File Path:             C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_1500k.pth
+Evaluation Date:       2026-01-14 11:33:14
+Device:                cuda
+
+📊 EVALUATION CONFIGURATION
+────────────────────────────────────────────────────────────────
+Evaluated Episodes:    30
+Seed:                  100
+Environment:           CarRacing-v2
+Video Captured:        Yes (every 5 episodes)
+
+📈 PERFORMANCE STATISTICS
+────────────────────────────────────────────────────────────────
+Mean Reward:               639.60 ± 295.38
+Min Reward:                 49.32
+Max Reward:                935.20
+Median Reward:             726.52
+
+Win Rate (>900):         33.3%
+Success Rate (>0):      100.0%
+
+Average Steps:              683.5 ± 203.9
+
+🎮 AVERAGE CONTROL ACTIONS
+────────────────────────────────────────────────────────────────
+Steering:                 -0.0948
+Throttle:                 -0.2721
+Brake:                    -1.2050
+
+💾 GENERATED FILES
+────────────────────────────────────────────────────────────────
+✓ results.json              - Detailed data (JSON)
+✓ evaluation_plots.png      - Performance plots
+✓ videos/                   - Episode videos
+✓ report.txt                - This report
+
+╔════════════════════════════════════════════════════════════════════╗
+║                        END OF REPORT                               ║
+╚════════════════════════════════════════════════════════════════════╝

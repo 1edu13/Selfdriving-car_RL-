@@ -1,0 +1,47 @@
+
+╔════════════════════════════════════════════════════════════════════╗
+║                  EVALUATION REPORT - RL MODEL                      ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📋 MODEL INFORMATION
+────────────────────────────────────────────────────────────────
+Model Name:            model_2500k
+File Path:             C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T4\model_2500k.pth
+Evaluation Date:       2026-01-12 20:02:00
+Device:                cuda
+
+📊 EVALUATION CONFIGURATION
+────────────────────────────────────────────────────────────────
+Evaluated Episodes:    30
+Seed:                  100
+Environment:           CarRacing-v2
+Video Captured:        Yes (every 5 episodes)
+
+📈 PERFORMANCE STATISTICS
+────────────────────────────────────────────────────────────────
+Mean Reward:               820.89 ± 181.94
+Min Reward:                115.95
+Max Reward:                936.60
+Median Reward:             887.19
+
+Win Rate (>900):         36.7%
+Success Rate (>0):      100.0%
+
+Average Steps:              909.2 ± 136.3
+
+🎮 AVERAGE CONTROL ACTIONS
+────────────────────────────────────────────────────────────────
+Steering:                 -0.0735
+Throttle:                  0.4171
+Brake:                    -0.5246
+
+💾 GENERATED FILES
+────────────────────────────────────────────────────────────────
+✓ results.json              - Detailed data (JSON)
+✓ evaluation_plots.png      - Performance plots
+✓ videos/                   - Episode videos
+✓ report.txt                - This report
+
+╔════════════════════════════════════════════════════════════════════╗
+║                        END OF REPORT                               ║
+╚════════════════════════════════════════════════════════════════════╝
