@@ -67,5 +67,5 @@ def evaluate(model_path, episodes=5):
 
 if __name__ == "__main__":
 
-    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T5_grass\model_0500k.pth"
+    modelo_a_probar = r"C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_0500k.pth"
     evaluate(modelo_a_probar)

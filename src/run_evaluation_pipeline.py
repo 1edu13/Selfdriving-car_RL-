@@ -23,36 +23,36 @@ def main():
     print_banner("EVALUATION PIPELINE - SELF-DRIVING CAR RL")
 
     # ========== CONFIGURATION ==========
-    # RUTAS DE LOS 8 MODELOS (AJUSTA LAS RUTAS REALES)
-    # Sugerencia: Usa nombres de clave que indiquen los pasos para ordenamiento automático
+    # PATH TO THE 8 MODELS
+
     models_to_evaluate = {
-        # Fase Inicial (Aprendizaje básico)
-        'model_0200k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_0200k.pth',
+        # Initial Phase (Basic Learning)
+        'model_0200k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_0200k.pth',
 
-        # Primer Progreso (El coche ya no gira en círculos)
-        'model_0500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_0500k.pth',  # Tu archivo anterior
+        # First Progress (Car no longer spins in circles)
+        'model_0500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_0500k.pth',
 
-        # Punto Medio (Mejora rápida)
-        'model_1000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_1000k.pth',  # Tu archivo anterior
+        # Midpoint (Rapid Improvement)
+        'model_1000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_1000k.pth',
 
-        # Punto Medio+ (Mejora rápida)
-        'model_1250k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6\model_grass_1250k.pth',
+        # Midpoint+ (Rapid Improvement)
+        'model_1250k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_grass_1250k.pth',
 
-        # Transición (Convergencia)
-        'model_1500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_1500k.pth',  # Aprox
+        # Transition (Convergence)
+        'model_1500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_1500k.pth',  # Approx
 
-        # Pre-Saturación (Tu modelo "final" anterior, que era 2M)
-        'model_2000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_2000k.pth',
+        # Pre-Saturation (Previous "final" model, which was 2M)
+        'model_2000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_B\model_2000k.pth',
 
-        # Confirmación Rodilla
+        # Knee Confirmation
         'model_2500k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_2500k.pth',
 
-        # Final Real (Saturación)
+        # Real Final (Saturation)
         'model_3000k': r'C:\Users\hmphu\PycharmProjects\Selfdriving-car_RL-\Models\models_T6_grass\model_3000k.pth',
     }
 
-    num_episodes = 30  # Episodios por modelo
-    seed = 100  # Misma seed para todos
+    num_episodes = 30  # Episodes per model
+    seed = 100  # Same seed for all
 
     # ========== PHASE 1: INDIVIDUAL EVALUATION ==========
     print_banner("PHASE 1: Individual Model Evaluation")
@@ -69,12 +69,12 @@ def main():
             continue
 
         try:
-            # Usamos el nombre de la clave (model_0200k) como identificador de carpeta
-            # para mantener el orden limpio
+            # Use the key name (model_0200k) as folder identifier
+            # to keep the order clean
             evaluator = RobustEvaluator(model_path, num_episodes, seed)
-            # Forzamos el nombre del modelo para que coincida con nuestra clave ordenada
+            # Force the model name to match our sorted key
             evaluator.model_name = model_key
-            # Re-creamos directorios con el nuevo nombre
+            # Re-create directories with the new name
             evaluator.output_dir = Path("evaluation_results") / model_key
             evaluator.output_dir.mkdir(parents=True, exist_ok=True)
             evaluator.videos_dir = evaluator.output_dir / "videos"
@@ -95,7 +95,7 @@ def main():
     print_banner("PHASE 2: Advanced Comparative Analysis")
 
     try:
-        # Pasamos la lista ordenada de claves para que los gráficos salgan en orden (200->3M)
+        # Pass the sorted list of keys so plots appear in order (200->3M)
         sorted_models = sorted(list(evaluation_results.keys()))
 
         analyzer = ComparativeAnalysis(evaluation_results_dir="evaluation_results")

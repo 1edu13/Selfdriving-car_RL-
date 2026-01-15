@@ -187,11 +187,11 @@ def train():
 
         # Save Model periodically
         if update % 25 == 0:
-            torch.save(agent.state_dict(), f"../Models/models_T4/ppo_car_racing_step_{global_step}.pth")
+            torch.save(agent.state_dict(), f"../Models/models_A/ppo_car_racing_step_{global_step}.pth")
             print(f"Model saved at step {global_step}")
 
     # Save final model
-    torch.save(agent.state_dict(), "../Models/models_T4/model_3000k.pth")
+    torch.save(agent.state_dict(), "../Models/models_A/final.pth")
     envs.close()
     print("Training Completed.")
 
