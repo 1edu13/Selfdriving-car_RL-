@@ -9,7 +9,7 @@ import numpy as np
 import torch
 
 from agent import Agent
-# CAMBIO IMPORTANTE: Usamos utils2 para tener el wrapper de la hierba
+# IMPORTANT CHANGE: We use utils2 to get the grass wrapper
 from utils2 import make_env, get_device
 
 
@@ -54,7 +54,7 @@ class RobustEvaluator:
     def load_agent(self) -> Agent:
         """Loads the trained model."""
         # Create dummy env to get correct shapes
-        # CAMBIO: Añadido apply_grass_penalty=True para consistencia
+        # CHANGE: Added apply_grass_penalty=True for consistency
         dummy_env = make_env(
             "CarRacing-v2", seed=self.seed, idx=0,
             capture_video=False, run_name="dummy",
@@ -84,27 +84,27 @@ class RobustEvaluator:
         run_name = f"eval_{self.model_name}_ep{episode_num:03d}"
 
         if capture_video:
-            # CAMBIO: Activamos la penalización de hierba
+            # CHANGE: Activate grass penalty
             env = make_env(
                 "CarRacing-v2",
-                seed=self.seed + episode_num,
+                seed=self.seed,
                 idx=0,
                 capture_video=True,
                 run_name=run_name,
                 apply_grass_penalty=True
             )()
         else:
-            # CAMBIO: Activamos la penalización de hierba
+            # CHANGE: Activate grass penalty
             env = make_env(
                 "CarRacing-v2",
-                seed=self.seed + episode_num,
+                seed=self.seed,
                 idx=0,
                 capture_video=False,
                 run_name=run_name,
                 apply_grass_penalty=True
             )()
 
-        obs, _ = env.reset(seed=self.seed + episode_num)
+        obs, _ = env.reset(seed=self.seed)
         obs = torch.as_tensor(np.array(obs)).float().unsqueeze(0).to(self.device)
 
         episode_reward = 0.0

@@ -98,6 +98,17 @@ class ComparativeAnalysis:
 
         for model_name, results in self.all_results.items():
             stats = results['statistics']
+
+            # --- CORRECCIÓN ---
+            # Intentar obtener steering_std de stats, si no, calcularlo desde los episodios
+            steering_std = stats.get('steering_std')
+            if steering_std is None or steering_std == 0:
+                # Recopilar todos los steering_std de los episodios
+                all_stds = [ep.get('steering_std', 0) for ep in results.get('episodes', [])]
+                # Calcular el promedio (evitando división por cero)
+                steering_std = sum(all_stds) / len(all_stds) if all_stds else 0
+            # ------------------
+
             comparison_data.append({
                 'Model': model_name,
                 'Mean Reward': stats['mean_reward'],
@@ -108,8 +119,8 @@ class ComparativeAnalysis:
                 'Success Rate (%)': stats['success_rate'],
                 'Avg Steps': stats['mean_length'],
                 'Episodes': results['num_episodes'],
-                # Safe access for advanced metrics
-                'Steering (std)': stats.get('steering_std', 0),
+                # Usar el valor corregido
+                'Steering (std)': steering_std,
                 'Throttle (mean)': stats.get('throttle_mean', 0),
                 'Brake (mean)': stats.get('brake_mean', 0)
             })
@@ -427,7 +438,7 @@ Win Rate Improvement:  {last_stats['win_rate'] - first_stats['win_rate']:>10.1f}
         ax.set_xticks(angles[:-1])
         ax.set_xticklabels(categories, fontsize=10, fontweight="bold")
         ax.set_title("Driving Profile Comparison (Normalized)", fontsize=15, fontweight="bold", y=1.05)
-        ax.legend(loc='upper right', bbox_to_anchor=(1.2, 1.1))
+        ax.legend(loc='upper right', bbox_to_anchor=(1.1, 1.0))
 
         plt.savefig(self.comparison_dir / "B_control_radar.png", dpi=300)
         plt.close()

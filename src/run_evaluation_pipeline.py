@@ -23,7 +23,7 @@ def main():
     print_banner("EVALUATION PIPELINE - SELF-DRIVING CAR RL")
 
     # ========== CONFIGURATION ==========
-    # RUTAS DE LOS 7 MODELOS (AJUSTA LAS RUTAS REALES)
+    # RUTAS DE LOS 8 MODELOS (AJUSTA LAS RUTAS REALES)
     # Sugerencia: Usa nombres de clave que indiquen los pasos para ordenamiento automático
     models_to_evaluate = {
         # Fase Inicial (Aprendizaje básico)

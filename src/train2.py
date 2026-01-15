@@ -11,7 +11,7 @@ from utils2 import make_env, get_device
 
 def train():
     # --- Hyperparameters ---
-    run_name = "ppo_carracing_T5_grass_penalty"  # Nombre para identificar esta runn
+    run_name = "ppo_carracing_T5_grass_penalty"  # Name to identify this run
     env_id = "CarRacing-v2"
     seed = 42
     total_timesteps = 3000000
@@ -34,15 +34,15 @@ def train():
     # --- Setup ---
     device = get_device()
 
-    # Crear directorios para guardar los nuevos modelos T4
+    # Create directories to save the new T4 models
     os.makedirs("../Models/models_T6_grass", exist_ok=True)
 
-    # Nota: La carpeta de videos se crea automáticamente por el wrapper,
-    # pero nos aseguramos de que exista la base.
+    # Note: The video folder is created automatically by the wrapper,
+    # but we ensure the base exists.
     os.makedirs("videos_T6", exist_ok=True)
 
     # Vectorized Environment
-    # AQUI ESTA LA CLAVE: apply_grass_penalty=True
+    # HERE IS THE KEY: apply_grass_penalty=True
     envs = gym.vector.AsyncVectorEnv(
         [make_env(env_id, seed + i, i, capture_video=False, run_name=run_name, apply_grass_penalty=True)
          for i in range(num_envs)]
@@ -100,7 +100,7 @@ def train():
             if "final_info" in infos:
                 for info in infos["final_info"]:
                     if info and "episode" in info:
-                        # Log extra para ver si el timeout de hierba está funcionando
+                        # Extra log to see if the grass timeout is working
                         timeout_str = " (Grass Timeout)" if info.get('off_track_timeout') else ""
                         print(f"Global Step: {global_step} | Episode Reward: {info['episode']['r']:.2f}{timeout_str}")
 

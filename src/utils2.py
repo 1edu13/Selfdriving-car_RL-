@@ -6,10 +6,10 @@ from gymnasium.wrappers import GrayScaleObservation, FrameStack
 
 class GrassPenaltyWrapper(gym.Wrapper):
     """
-    Wrapper que penaliza si el agente pisa la hierba.
-    Versión 3.0:
-    - Lógica ROI (Region of Interest): Solo mira la zona del coche.
-    - Evita falsos positivos por el césped del fondo.
+    Wrapper that penalizes if the agent drives on grass.
+    Version 3.0:
+    - ROI Logic (Region of Interest): Only looks at the car zone.
+    - Avoids false positives from background grass.
     """
 
     def __init__(self, env, grass_penalty=0.8, max_off_track=50):
@@ -21,7 +21,7 @@ class GrassPenaltyWrapper(gym.Wrapper):
         self.debug_printed = False
 
     def reset(self, **kwargs):
-        """Reinicia los contadores al empezar un nuevo episodio."""
+        """Resets counters when starting a new episode."""
         self.off_track_frames = 0
         self.episode_steps = 0
         self.debug_printed = False
@@ -30,53 +30,53 @@ class GrassPenaltyWrapper(gym.Wrapper):
     def step(self, action):
         self.episode_steps += 1
 
-        # 1. Paso normal del entorno
+        # 1. Standard environment step
         obs, rew, terminated, truncated, info = self.env.step(action)
 
-        # --- PERIODO DE GRACIA (ZOOM INICIAL) ---
+        # --- GRACE PERIOD (INITIAL ZOOM) ---
         if self.episode_steps < 60:
             return obs, rew, terminated, truncated, info
 
-        # 2. DEFINIR ZONA CRÍTICA (ROI)
-        # El coche está siempre centrado abajo.
-        # Recortamos solo un rectángulo alrededor del coche para ignorar el paisaje.
-        # Vertical: 60 a 80 (Justo delante y sobre el coche)
-        # Horizontal: 38 a 58 (El ancho de la carretera central)
+        # 2. DEFINE REGION OF INTEREST (ROI)
+        # The car is always centered at the bottom.
+        # We crop only a rectangle around the car to ignore the landscape.
+        # Vertical: 60 to 80 (Right in front and over the car)
+        # Horizontal: 38 to 58 (The width of the central road)
         roi = obs[60:80, 38:58, :]
 
-        # 3. DETECTAR HIERBA EN LA ROI
-        # Usamos la lógica de color dominante sobre el recorte (roi), no sobre toda la obs
+        # 3. DETECT GRASS IN THE ROI
+        # We use dominant color logic on the crop (roi), not on the whole obs
         is_green = (
-                (roi[:, :, 1] > roi[:, :, 0] + 10) &  # Verde > Rojo
-                (roi[:, :, 1] > roi[:, :, 2] + 10) &  # Verde > Azul
-                (roi[:, :, 1] > 100)  # Brillo mínimo
+                (roi[:, :, 1] > roi[:, :, 0] + 10) &  # Green > Red
+                (roi[:, :, 1] > roi[:, :, 2] + 10) &  # Green > Blue
+                (roi[:, :, 1] > 100)  # Minimum brightness
         )
 
-        # Ratio de hierba EN LA ZONA DEL COCHE
+        # Grass ratio IN THE CAR ZONE
         green_ratio = np.mean(is_green)
 
-        # 4. PENALIZACIÓN
-        # Ahora podemos ser más estrictos con el umbral (0.4) porque solo miramos la carretera.
-        # Si el 40% de la zona del coche es verde, es que te has salido.
+        # 4. PENALTY
+        # Now we can be stricter with the threshold (0.4) because we only look at the road.
+        # If 40% of the car zone is green, it means you went off-track.
         if green_ratio > 0.40:
             rew -= self.grass_penalty
             self.off_track_frames += 1
 
-            # Debug visual en consola (solo la primera vez que se sale en el episodio)
+            # Visual debug in console (only the first time it goes off-track in the episode)
             if not self.debug_printed and self.off_track_frames > 5:
-                print(f"⚠️  SALIDA DE PISTA DETECTADA (Step {self.episode_steps})")
+                print(f"⚠️  OFF-TRACK DETECTED (Step {self.episode_steps})")
                 self.debug_printed = True
 
-            # Muerte súbita
+            # Sudden death
             if self.off_track_frames > self.max_off_track:
-                # print(f"💀 Muerte súbita (Step {self.episode_steps})")
+                # print(f"💀 Sudden death (Step {self.episode_steps})")
                 terminated = True
                 info['off_track_timeout'] = True
         else:
-            # Si vuelve a la pista, reseteamos el contador
+            # If it returns to the track, we reset the counter
             if self.off_track_frames > 0:
                 self.off_track_frames = 0
-                self.debug_printed = False  # Permitir imprimir de nuevo
+                self.debug_printed = False  # Allow printing again
 
         info['grass_ratio'] = green_ratio
 
@@ -85,7 +85,7 @@ class GrassPenaltyWrapper(gym.Wrapper):
 
 def make_env(env_id, seed, idx, capture_video, run_name, apply_grass_penalty=False):
     """
-    Función para crear y configurar el entorno.
+    Function to create and configure the environment.
     """
 
     def thunk():
@@ -94,7 +94,7 @@ def make_env(env_id, seed, idx, capture_video, run_name, apply_grass_penalty=Fal
         if capture_video and idx == 0:
             env = gym.wrappers.RecordVideo(env, f"videos_T6/{run_name}")
 
-        # --- APLICAR WRAPPER ---
+        # --- APPLY WRAPPER ---
         if apply_grass_penalty:
             env = GrassPenaltyWrapper(env)
         # -----------------------
